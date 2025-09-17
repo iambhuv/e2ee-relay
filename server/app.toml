@@ -1,0 +1,12 @@
+[server]
+port = 6666
+allowed_origins = [
+  "http://localhost:3000",
+  "http://localhost:3002",
+  "http://192.168.100.56:3000",
+  "http://127.0.0.1:3000"
+]
+
+[scylla]
+known_nodes = ["172.18.0.2:9042"]
+keyspace = "p2pe2e"
