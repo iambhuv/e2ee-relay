@@ -46,8 +46,13 @@ struct ServerHello {
 // == Encrypted using `Shared::EISK` ==
 struct Connect {
   proof // Decrypted `Shared::EIP`
-  ...
+  ... // if needed
 }
 // == Encrypted  ==
 ```
 
+
+
+### Server Response to Connection
+
+Either Accept or Reject (by closing connection)[ if proof was wrong ]

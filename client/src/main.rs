@@ -1,12 +1,27 @@
-use std::{error::Error, fs, io::ErrorKind, time::SystemTime};
+use std::{
+    error::Error,
+    fs,
+    io::{ErrorKind, Read, Write},
+    time::SystemTime,
+};
 
 use bincode::{Decode, Encode, config::Configuration};
 use common::{
-    derive_public_key, events::server::payloads::ClientHelloPayload, get_ephemeral_keypair,
-    get_nonce, get_secret_key,
+    derive_public_key,
+    events::{
+        self, client,
+        server::{self, Events, payloads::ClientHelloPayload},
+    },
+    get_ephemeral_keypair, get_nonce, get_secret_key,
 };
 
-use tokio_tungstenite::{self as ws, tungstenite::http::StatusCode};
+use futures_util::{SinkExt, StreamExt, sink::Send};
+
+use tokio::net::TcpStream;
+use tokio_tungstenite::{
+    self as ws, MaybeTlsStream, WebSocketStream,
+    tungstenite::{Bytes, Message, WebSocket, http::StatusCode},
+};
 
 // Creates `.user` in current dir to store the keys
 
@@ -61,12 +76,12 @@ fn get_user_file() -> (User, bool) {
     }
 }
 
-#[derive(Debug)]
-struct ClientHelloPayloadWithoutSignature {
-    pub identity_pubkey: [u8; 32],
-    pub epeheral_pubkey: [u8; 32],
-    pub nonce: [u8; 16],
-    pub timestamp: i64,
+async fn send_msg(ws: &mut WebSocketStream<MaybeTlsStream<TcpStream>>, ev: Events) -> bool {
+    ws.send(Message::Binary(Bytes::from(
+        rmp_serde::to_vec(&ev).unwrap(),
+    )))
+    .await
+    .is_err()
 }
 
 #[tokio::main]
@@ -85,13 +100,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // For Realtime ofc
     // No RESTApi btw
 
-    let (ws, resp) = ws::connect_async("ws://0.0.0.0:1729/socket").await?;
+    let (mut ws, resp) = ws::connect_async("ws://0.0.0.0:1729/socket").await?;
 
     if resp.status() == StatusCode::SWITCHING_PROTOCOLS {
         println!("[+] Connected to RealTime Relay Server!");
     }
 
-    println!("[-] Waiting for Secure Channel!");
+    println!("[!] Waiting for Secure Channel!");
 
     /*
      - Connection Steps
@@ -101,17 +116,41 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let (esk, epk) = get_ephemeral_keypair();
 
-    let hello = ClientHelloPayloadWithoutSignature {
+    let hello = ClientHelloPayload {
         epeheral_pubkey: epk.to_bytes(),
         identity_pubkey: user.public,
-        nonce: get_nonce(),
         timestamp: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs() as i64,
     };
 
-    println!("HELLO PAYLOAD : {:?}", hello);
+    if send_msg(&mut ws, Events::ClientHello(hello)).await {
+        println!("[-] Failed to Send ClientHello Message")
+    } else {
+        println!("[+] Sent ClientHello Message")
+    }
+
+    while let Some(packet) = ws.next().await {
+        match packet {
+            Ok(Message::Binary(bytes)) => {
+                let message = rmp_serde::from_slice::<client::Events>(&bytes)
+                    .expect("[-] Server Sent Unknown Message");
+
+                match message {
+                    client::Events::SeverHello(payload) => {
+                        println!("[/] GOT SERVER'S RESPONSE HOLY??? : {:?}", payload)
+                    }
+                }
+            }
+            Ok(msg) => {
+                println!("[?] Received Unknown Packet : {}", msg)
+            }
+            Err(err) => {
+                println!("[-] RealTime Error : {}", err)
+            }
+        }
+    }
 
     Ok(())
 }

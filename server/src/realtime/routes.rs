@@ -1,10 +1,17 @@
 use axum::{
+    Router,
     extract::{
+        WebSocketUpgrade,
         ws::{
             Message,
             WebSocket,
-        }, WebSocketUpgrade
-    }, response::{IntoResponse, Response}, routing::any, Router
+        },
+    },
+    response::{
+        IntoResponse,
+        Response,
+    },
+    routing::any,
 };
 use common::events::server;
 use futures::{
@@ -21,6 +28,22 @@ pub fn routes() -> Router {
 async fn handler(ws: WebSocketUpgrade) -> impl IntoResponse {
     ws.on_upgrade(handle_socket)
 }
+
+// |== NEED SEPERATE FILE ==|
+
+type EpK = [u8; 32];
+type EsK = [u8; 32];
+type IpK = [u8; 32];
+
+struct SDClient(EpK, IpK);
+struct SDServer(EpK, EsK);
+
+struct SocketData {
+    client: SDClient,
+    server: SDServer
+}
+
+// |== NEED SEPERATE FILE ==|
 
 async fn handle_socket(socket: WebSocket) {
     let (mut tx_ws, mut rx) = socket.split();
@@ -42,7 +65,7 @@ async fn handle_socket(socket: WebSocket) {
                 if let Ok(data) = rmp_serde::from_slice::<server::Events>(&bytes) {
                     match data {
                         server::Events::ClientHello(payload) => {
-                            println!("GOT CLIENT HELLO EVENT : {:?}", payload)
+                            // Ignoring EPK
                         },
                     }
                 } else {
