@@ -6,7 +6,7 @@ use std::net::{
     SocketAddr,
 };
 
-use axum::{routing::get, Router};
+use axum::routing::get;
 use scylla::client::{
     session::Session,
     session_builder::SessionBuilder,

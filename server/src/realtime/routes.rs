@@ -19,8 +19,6 @@ pub fn routes() -> Router {
 }
 
 async fn handler(ws: WebSocketUpgrade) -> impl IntoResponse {
-    println!("Yes {:?}", ws);
-
     ws.on_upgrade(handle_socket)
 }
 
@@ -40,6 +38,7 @@ async fn handle_socket(socket: WebSocket) {
     while let Some(msg) = rx.next().await {
         match msg {
             Ok(Message::Binary(bytes)) => {
+                println!("[+] Message: {:?}", bytes);
                 if let Ok(data) = rmp_serde::from_slice::<server::Events>(&bytes) {
                     match data {
                         server::Events::ClientHello(payload) => {
