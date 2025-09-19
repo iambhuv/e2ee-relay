@@ -139,6 +139,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                 match message {
                     client::Events::SeverHello(payload) => {
+                        // Server's EPK, gotta acknowledge it
+                        // payload.ephemeral_pubkey
                         println!("[/] GOT SERVER'S RESPONSE HOLY??? : {:?}", payload)
                     }
                 }

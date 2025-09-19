@@ -1,16 +1,12 @@
 // use std::cell::OnceCell;
 
-use std::net::{
-    IpAddr,
-    Ipv4Addr,
-    SocketAddr,
-};
+use std::net::IpAddr;
+use std::net::Ipv4Addr;
+use std::net::SocketAddr;
 
 use axum::routing::get;
-use scylla::client::{
-    session::Session,
-    session_builder::SessionBuilder,
-};
+use scylla::client::session::Session;
+use scylla::client::session_builder::SessionBuilder;
 use tokio::sync::OnceCell;
 
 use crate::utils::config::load_config;

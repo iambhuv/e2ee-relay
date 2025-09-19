@@ -8,3 +8,13 @@ pub struct ClientHelloPayload {
     // which there cant be because its not straight forward authentication
     // pub timestamp: i64
 }
+
+
+
+#[derive(Serialize, Deserialize, Debug)]
+/**
+ * Proof is unencrypted but the whole event is supposed to be encrypted somehow
+ */
+pub struct ConnectPayload {
+    pub proof: [u8; 32]
+}

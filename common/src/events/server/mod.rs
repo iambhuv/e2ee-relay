@@ -19,6 +19,8 @@ pub enum Events {
      * (identity_pubkey, ephemeral_pubkey, nonce, ts, sig)
      */
     ClientHello(super::server::payloads::ClientHelloPayload),
+
+    Connect(super::server::payloads::ConnectPayload)
 }
 
 impl EventTrait for Events {}

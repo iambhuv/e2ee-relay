@@ -1,43 +1,22 @@
-use axum::{
-    Router,
-    body::Bytes,
-    extract::{
-        WebSocketUpgrade,
-        ws::{
-            Message,
-            WebSocket,
-        },
-    },
-    response::{
-        IntoResponse,
-        Response,
-    },
-    routing::any,
-};
-use common::{
-    EphemeralSecret,
-    PublicKey,
-    SharedSecret,
-    encrypt_data,
-    events::{
-        client::{
-            Events,
-            payloads::ServerHelloPayload,
-        },
-        server,
-    },
-    get_ephemeral_keypair,
-    get_nonce,
-    get_shared_key,
-    shared::{
-        info,
-        salts,
-    },
-};
-use futures::{
-    SinkExt,
-    StreamExt,
-};
+use axum::Router;
+use axum::body::Bytes;
+use axum::extract::WebSocketUpgrade;
+use axum::extract::ws::Message;
+use axum::extract::ws::WebSocket;
+use axum::response::IntoResponse;
+use axum::routing::any;
+use common::PublicKey;
+use common::encrypt_data;
+use common::events::client::Events;
+use common::events::client::payloads::ServerHelloPayload;
+use common::events::server;
+use common::get_ephemeral_keypair;
+use common::get_nonce;
+use common::get_shared_key;
+use common::shared::info;
+use common::shared::salts;
+use futures::SinkExt;
+use futures::StreamExt;
 use tokio::sync::mpsc::Sender;
 
 pub fn routes() -> Router {
@@ -95,6 +74,7 @@ async fn handle_socket(socket: WebSocket) {
     let mut sockdat: Option<SocketData> = None;
 
     while let Some(msg) = rx.next().await {
+        // TODO: Gotta Separate em
         match msg {
             Ok(Message::Binary(bytes)) => {
                 println!("[+] Message: {:?}", bytes);
@@ -138,6 +118,7 @@ async fn handle_socket(socket: WebSocket) {
                                 return;
                             }
                         },
+                        server::Events::Connect(payload) => todo!(),
                     }
                 } else {
                     return;
