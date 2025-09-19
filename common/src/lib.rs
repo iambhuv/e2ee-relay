@@ -1,7 +1,7 @@
 use std::vec;
 
 use chacha20poly1305::{
-    AeadCore, ChaCha20Poly1305, Key, KeyInit, Nonce,
+    AeadCore, ChaCha20Poly1305, Error, Key, KeyInit, Nonce,
     aead::{AeadMutInPlace, OsRng, rand_core::RngCore},
 };
 
@@ -57,7 +57,6 @@ pub fn get_shared_key(
     okm
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedData {
     pub nonce: Vec<u8>,
@@ -84,4 +83,14 @@ pub fn encrypt_data(data: &[u8], key: &[u8; 32], ad: &[u8]) -> EncryptedData {
         nonce: nonce.to_vec(),
         cipher,
     }
+}
+
+pub fn decrypt_data(data: EncryptedData, key: &[u8; 32], ad: &[u8]) -> Result<Vec<u8>, Error> {
+    let mut chacha20 = ChaCha20Poly1305::new(Key::from_slice(key));
+
+    let mut buffer = Vec::from(data.cipher);
+
+    chacha20
+        .decrypt_in_place(data.nonce.as_slice().into(), &ad, &mut buffer)
+        .map(|_| buffer)
 }
