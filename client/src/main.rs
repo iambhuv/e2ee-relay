@@ -119,10 +119,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let hello = ClientHelloPayload {
         epeheral_pubkey: epk.to_bytes(),
         identity_pubkey: user.public,
-        timestamp: std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as i64,
+        // timestamp: std::time::SystemTime::now()
+        //     .duration_since(std::time::UNIX_EPOCH)
+        //     .unwrap()
+        //     .as_secs() as i64,
     };
 
     if send_msg(&mut ws, Events::ClientHello(hello)).await {

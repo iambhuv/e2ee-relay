@@ -1,5 +1,6 @@
 use axum::{
     Router,
+    body::Bytes,
     extract::{
         WebSocketUpgrade,
         ws::{
@@ -13,11 +14,31 @@ use axum::{
     },
     routing::any,
 };
-use common::events::server;
+use common::{
+    EphemeralSecret,
+    PublicKey,
+    SharedSecret,
+    encrypt_data,
+    events::{
+        client::{
+            Events,
+            payloads::ServerHelloPayload,
+        },
+        server,
+    },
+    get_ephemeral_keypair,
+    get_nonce,
+    get_shared_key,
+    shared::{
+        info,
+        salts,
+    },
+};
 use futures::{
     SinkExt,
     StreamExt,
 };
+use tokio::sync::mpsc::Sender;
 
 pub fn routes() -> Router {
     println!("Listening to /");
@@ -31,16 +52,29 @@ async fn handler(ws: WebSocketUpgrade) -> impl IntoResponse {
 
 // |== NEED SEPERATE FILE ==|
 
-type EpK = [u8; 32];
-type EsK = [u8; 32];
-type IpK = [u8; 32];
-
-struct SDClient(EpK, IpK);
-struct SDServer(EpK, EsK);
+/**
+ * Client::(EpK, IpK)
+ */
+struct SDClient(PublicKey, PublicKey);
+/**
+ * Server::(EsK, EpK)
+ */
+struct SDServer(PublicKey);
 
 struct SocketData {
     client: SDClient,
-    server: SDServer
+    server: SDServer,
+    shared: [u8; 32],
+    identity_proof: [u8; 32],
+}
+
+// fn get_sdserver() {
+//     let (sec, r#pub) = get_ephemeral_keypair();
+//     sec.
+// }
+
+async fn send_msg(ws: &Sender<Message>, ev: Events) -> bool {
+    ws.send(Message::Binary(Bytes::from(rmp_serde::to_vec(&ev).unwrap()))).await.is_err()
 }
 
 // |== NEED SEPERATE FILE ==|
@@ -58,6 +92,8 @@ async fn handle_socket(socket: WebSocket) {
         }
     });
 
+    let mut sockdat: Option<SocketData> = None;
+
     while let Some(msg) = rx.next().await {
         match msg {
             Ok(Message::Binary(bytes)) => {
@@ -65,7 +101,42 @@ async fn handle_socket(socket: WebSocket) {
                 if let Ok(data) = rmp_serde::from_slice::<server::Events>(&bytes) {
                     match data {
                         server::Events::ClientHello(payload) => {
-                            // Ignoring EPK
+                            let c_epk = PublicKey::from(payload.epeheral_pubkey);
+                            let c_ipk = PublicKey::from(payload.identity_pubkey);
+
+                            let (s_esk, s_epk) = get_ephemeral_keypair();
+
+                            // Server::EphemeralSecretKey + Client::IdentityPublicKey
+                            let shared_secret = s_esk.diffie_hellman(&c_ipk);
+
+                            let shared = get_shared_key(
+                                shared_secret,
+                                salts::HANDSHAKE,
+                                info::SERVER_RESPONSE_TO_CLIENTHELLO,
+                            );
+
+                            let identity_proof = get_nonce::<32>();
+
+                            sockdat = Some(SocketData {
+                                client: SDClient(c_epk, c_ipk),
+                                server: SDServer(s_epk),
+                                shared,
+                                identity_proof,
+                            });
+
+                            // Preparing Challenge for Client
+                            let message = encrypt_data(
+                                &identity_proof,
+                                &shared,
+                                &rmp_serde::to_vec(&payload).unwrap(),
+                            );
+
+                            let server_hello =
+                                ServerHelloPayload { ephemeral_pubkey: s_epk.to_bytes(), message };
+
+                            if send_msg(&tx_msg, Events::SeverHello(server_hello)).await {
+                                return;
+                            }
                         },
                     }
                 } else {

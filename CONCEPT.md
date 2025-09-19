@@ -6,7 +6,7 @@ Only 1st Messages on Both Client & Server will be Unencrypted to identity verifi
 ### Client: To Successful Connection with Relay
 - Generates Ephemeral Key Pair `Client::{ESK,EPK}`
 
-### Client: First Payload (1)
+### Client: First Payload (1) [DONE]
 ```rs
 struct ClientHello {
   identity_pubkey // Client::IPK
