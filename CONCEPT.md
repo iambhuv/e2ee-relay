@@ -1,7 +1,10 @@
 ## Handshake Plan
-**NOTE:** There is No JWT or OAuth involved
 
-Only 1st Messages on Both Client & Server will be Unencrypted to identity verification and accomplish handshake
+> [!NOTE]
+> **Concept Implemented**
+>
+> There is No JWT or OAuth involved
+> Only 1st Messages on Both Client & Server will be Unencrypted to identity verification and accomplish handshake
 
 ### Client: To Successful Connection with Relay
 - Generates Ephemeral Key Pair `Client::{ESK,EPK}`
