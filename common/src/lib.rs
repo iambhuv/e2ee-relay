@@ -38,6 +38,13 @@ pub fn get_ephemeral_keypair() -> (EphemeralSecret, PublicKey) {
     (esk, epk)
 }
 
+pub fn get_static_keypair() -> (StaticSecret, PublicKey) {
+    let esk = StaticSecret::random_from_rng(&mut OsRng);
+    let epk = PublicKey::from(&esk);
+
+    (esk, epk)
+}
+
 pub fn get_nonce<const N: usize>() -> [u8; N] {
     let mut nonce = [0u8; N];
     OsRng.fill_bytes(&mut nonce);
@@ -46,7 +53,7 @@ pub fn get_nonce<const N: usize>() -> [u8; N] {
 
 // SharedSecret
 pub fn get_shared_key(
-    shared_secret: SharedSecret,
+    shared_secret: &SharedSecret,
     salt: &'static str,
     info: &'static str,
 ) -> [u8; 32] {

@@ -7,20 +7,22 @@ use crate::events::EventTrait;
 
 pub mod payloads;
 
-// #[derive(Serialize, Deserialize)]
-// pub struct ServerEventPayload(Events, Vec<u8>);
+#[derive(Serialize, Deserialize)]
+pub struct UnsafeClientHello(pub super::server::payloads::ClientHelloPayload);
+// #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+// pub enum UnsafeEvents {
+//     /**
+//      * Supposedly First Event received by the Server
+//      *
+//      * (identity_pubkey, ephemeral_pubkey, nonce, ts, sig)
+//      */
+//     ClientHello(super::server::payloads::ClientHelloPayload),
+// }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Events {
-    /**
-     * Supposedly First Event received by the Server
-     *
-     * (identity_pubkey, ephemeral_pubkey, nonce, ts, sig)
-     */
-    ClientHello(super::server::payloads::ClientHelloPayload),
-
-    Connect(super::server::payloads::ConnectPayload)
+    Connect(super::server::payloads::ConnectPayload),
 }
 
 impl EventTrait for Events {}
