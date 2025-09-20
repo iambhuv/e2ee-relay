@@ -14,6 +14,7 @@ use common::derive_public_key;
 use common::encrypt_data;
 use common::events::client;
 use common::events::client::UnsafeSeverHello;
+use common::events::client::UnsafeSeverReject;
 use common::events::server::Events;
 use common::events::server::UnsafeClientHello;
 use common::events::server::payloads::ClientHelloPayload;
@@ -226,6 +227,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     //     // server: RTServer(server_pubkey),
                     //     id_proof: data,
                     // });
+                } else if let Ok(UnsafeSeverReject(reason)) =
+                    rmp_serde::from_slice::<UnsafeSeverReject>(&bytes)
+                {
+                    println!("[-] Connection got rejected with reason : {:?}", reason);
                 } else if let Ok(data) = rmp_serde::from_slice::<EncryptedData>(&bytes)
                     // && let Some(ref constate) = constate
                     && let Some(ref shared_secret) = shared_secret
@@ -249,6 +254,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 } else {
                     panic!("[-] Server Sent Unknown or Unexpected Message");
                 }
+            },
+            Ok(Message::Close(frame)) => {
+                println!("[!] Connection dropped with reason : {:#?}", frame)
             },
             Ok(msg) => {
                 println!("[?] Received Unknown Packet : {}", msg)

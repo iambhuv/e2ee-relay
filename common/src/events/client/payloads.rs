@@ -8,3 +8,13 @@ pub struct ServerHelloPayload {
 
     pub message: EncryptedData,
 }
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ServerRejectReasons {
+    UnregisteredPublicKey
+}
+
+// impl From<Utf8Bytes> for ServerRejectReasons {
+    
+// }

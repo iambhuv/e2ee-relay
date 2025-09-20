@@ -1,7 +1,9 @@
 use axum::Router;
 use axum::body::Bytes;
 use axum::extract::WebSocketUpgrade;
+use axum::extract::ws::CloseFrame;
 use axum::extract::ws::Message;
+use axum::extract::ws::Utf8Bytes;
 use axum::extract::ws::WebSocket;
 use axum::response::IntoResponse;
 use axum::routing::any;
@@ -13,9 +15,10 @@ use common::encrypt_data;
 use common::events::client;
 use common::events::client::Events;
 use common::events::client::UnsafeSeverHello;
+use common::events::client::UnsafeSeverReject;
 use common::events::client::payloads::ServerHelloPayload;
+use common::events::client::payloads::ServerRejectReasons;
 use common::events::server;
-use common::get_ephemeral_keypair;
 use common::get_nonce;
 use common::get_shared_key;
 use common::get_static_keypair;
@@ -25,9 +28,9 @@ use futures::SinkExt;
 use futures::StreamExt;
 use tokio::sync::mpsc::Sender;
 
-pub fn routes() -> Router {
-    println!("Listening to /");
+use crate::user::User;
 
+pub fn routes() -> Router {
     Router::new().route("/socket", any(handler))
 }
 
@@ -47,16 +50,12 @@ struct SDClient(PublicKey, PublicKey);
 struct SDServer(PublicKey);
 
 struct SocketData {
+    user: User,
     client: SDClient,
     server: SDServer,
     shared_secret: SharedSecret,
     identity_proof: [u8; 32],
 }
-
-// fn get_sdserver() {
-//     let (sec, r#pub) = get_ephemeral_keypair();
-//     sec.
-// }
 
 /**
  * sends encrypted payload to client
@@ -99,6 +98,21 @@ async fn handle_socket(socket: WebSocket) {
                     let c_epk = PublicKey::from(payload.ephemeral_pubkey);
                     let c_ipk = PublicKey::from(payload.identity_pubkey);
 
+                    let mut user = User::new(payload.identity_pubkey);
+                    let exists = user.exists().await.unwrap_or(false);
+
+                    if !exists {
+                        tx_msg
+                            .send(Message::Close(Some(CloseFrame {
+                                code: 1000,
+                                reason: format!("{:?}", ServerRejectReasons::UnregisteredPublicKey)
+                                    .into(),
+                            })))
+                            .await
+                            .ok();
+                        return;
+                    }
+
                     let (s_esk, s_epk) = get_static_keypair();
 
                     // Server::EphemeralSecretKey + Client::IdentityPublicKey
@@ -110,6 +124,7 @@ async fn handle_socket(socket: WebSocket) {
                     let shared_secret = s_esk.diffie_hellman(&c_epk);
 
                     sockdat = Some(SocketData {
+                        user,
                         client: SDClient(c_epk, c_ipk),
                         server: SDServer(s_epk),
                         shared_secret,
