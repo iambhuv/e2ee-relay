@@ -1,3 +1,4 @@
+use async_nats::PublishMessage;
 use axum::Router;
 use axum::body::Bytes;
 use axum::extract::WebSocketUpgrade;
@@ -29,6 +30,7 @@ use futures::StreamExt;
 use tokio::sync::mpsc::Sender;
 
 use crate::user::User;
+use crate::MQ_POOL;
 
 pub fn routes() -> Router {
     Router::new().route("/socket", any(handler))
@@ -185,6 +187,13 @@ async fn handle_socket(socket: WebSocket) {
                                 {
                                     return;
                                 }
+
+
+                                // WINDOW AFTER CONN ACCEPT
+
+                                let nats = MQ_POOL.get().unwrap();
+                                //nats.publish(subject, payload)
+                                // nats.send(PublishMessage { subject: "real".into(), payload: (), reply: (), headers: () });
                             },
                         },
                         _ => return,

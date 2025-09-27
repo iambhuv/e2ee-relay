@@ -1,4 +1,5 @@
 pub mod db;
+pub mod mq;
 mod listener;
 
 pub use listener::serve;

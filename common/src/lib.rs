@@ -1,7 +1,6 @@
-use std::vec;
-
+// use std::vec;
 use chacha20poly1305::{
-    AeadCore, ChaCha20Poly1305, Error, Key, KeyInit, Nonce,
+    AeadCore, ChaCha20Poly1305, Error, Key, KeyInit,
     aead::{AeadMutInPlace, OsRng, rand_core::RngCore},
 };
 

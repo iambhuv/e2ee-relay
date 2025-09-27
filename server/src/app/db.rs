@@ -16,7 +16,7 @@ pub mod scylla {
 
         println!("[+] Connected to ScyllaDB : true");
         scylla_session.get_cluster_state().get_nodes_info().iter().for_each(|node| {
-            println!("[+]  Cluster [{}] Connected : {}", node.address, node.is_connected())
+            println!("[+] *Cluster [{}] Connected : {}", node.address, node.is_connected())
         });
 
         SC_POOL.set(scylla_session).unwrap();

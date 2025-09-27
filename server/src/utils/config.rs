@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub struct AppConfig {
     pub server: ServerConfig,
     pub scylla: ScyllaConfig,
+    pub nats: NatsConfig
 }
 
 #[derive(Deserialize, Debug)]
@@ -18,6 +19,12 @@ pub struct ServerConfig {
 pub struct ScyllaConfig {
     pub known_nodes: Vec<String>,
     pub keyspace: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct NatsConfig {
+    pub server: String,
+    pub port: u16,
 }
 
 

@@ -34,4 +34,28 @@ will be sent all the pending messages available to them.
 
 `POST /register`, with 32 byte public key as body I suppose?
 
-yes, and hcaptcha to prevent abuse.
+yes, and hcaptcha to prevent abuse. *later*
+
+
+## NATS
+
+*After succesful handshake*
+All messages sent to subject 
+PublishMessage {
+  Subject -> DM:{USER_PUBLIC_KEY_HEX}
+  Payload -> Payload(
+    MessageCreate {
+      id: {UUID},
+      
+      from: {SENDER_PUBLIC_KEY_BYTES},
+      cipher: {ENCRYPTED_BYTES},
+      nonce: {NONCE_BYTES},
+      created_at: {TIMESTAMP},
+
+      // SIGN = HMAC(HKDF(DH, `SIGNATURE:MESSAGE:{Message::id}`))
+      signature: {SIGN(FROM,TO,PLAINTEXT,CREATED_AT)}
+    }
+
+    // Others
+  )
+}
