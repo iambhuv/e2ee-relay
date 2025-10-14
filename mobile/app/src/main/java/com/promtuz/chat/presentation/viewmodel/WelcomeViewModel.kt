@@ -52,7 +52,7 @@ class WelcomeViewModel(val keyManager: KeyManager) : ViewModel() {
         // Need to make the server support QUIC first, then make handler in client aswell
 
         // Step 5.
-        // of course
+        // of   course
     }
 
 }
