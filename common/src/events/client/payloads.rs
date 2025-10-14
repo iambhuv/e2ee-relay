@@ -9,12 +9,18 @@ pub struct ServerHelloPayload {
     pub message: EncryptedData,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ServerRejectReasons {
-    UnregisteredPublicKey
+    UnregisteredPublicKey,
+
+    Unknown,
 }
 
-// impl From<Utf8Bytes> for ServerRejectReasons {
-    
-// }
+impl From<&str> for ServerRejectReasons {
+    fn from(value: &str) -> Self {
+        match value {
+            "UnregisteredPublicKey" => Self::UnregisteredPublicKey,
+            _ => Self::Unknown,
+        }
+    }
+}

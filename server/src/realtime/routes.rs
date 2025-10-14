@@ -16,7 +16,6 @@ use common::encrypt_data;
 use common::events::client;
 use common::events::client::Events;
 use common::events::client::UnsafeSeverHello;
-use common::events::client::UnsafeSeverReject;
 use common::events::client::payloads::ServerHelloPayload;
 use common::events::client::payloads::ServerRejectReasons;
 use common::events::server;

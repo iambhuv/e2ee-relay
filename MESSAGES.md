@@ -34,7 +34,10 @@ will be sent all the pending messages available to them.
 
 `POST /register`, with 32 byte public key as body I suppose?
 
-yes, and hcaptcha to prevent abuse. *later*
+yes, and hcaptcha to prevent abuse.
+/register with public key normally BUT server will respond with a challenge ofc to prove your ownership of the key
+
+
 
 
 ## NATS

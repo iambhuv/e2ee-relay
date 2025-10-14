@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 pub use x25519_dalek::{EphemeralSecret, PublicKey, SharedSecret, StaticSecret};
 
+use generic_array::GenericArray;
+
 // pub mod constants;
 mod constants;
 pub mod events;
