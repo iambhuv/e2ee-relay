@@ -3,6 +3,7 @@ pub mod mq;
 mod listener;
 
 pub use listener::serve;
+pub use listener::serve_quic;
 
 pub fn init() {
     print!("\x1Bc"); // Clear Terminal

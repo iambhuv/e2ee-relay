@@ -1,4 +1,4 @@
-use std::{env, fs, path::Path};
+use std::{env, fs, path::Path, process::{self, exit, ExitCode}};
 
 use serde::Deserialize;
 
@@ -6,7 +6,8 @@ use serde::Deserialize;
 pub struct AppConfig {
     pub server: ServerConfig,
     pub scylla: ScyllaConfig,
-    pub nats: NatsConfig
+    pub nats: NatsConfig,
+    pub quic: QuicConfig
 }
 
 #[derive(Deserialize, Debug)]
@@ -28,6 +29,12 @@ pub struct NatsConfig {
 }
 
 
+#[derive(Deserialize, Debug)]
+pub struct QuicConfig {
+    pub port: u16,
+}
+
+
 pub fn load_config() -> AppConfig {
     let path = env::args().nth(1).unwrap_or_else(|| "app.toml".into());
     let path = Path::new(&path);
@@ -37,6 +44,13 @@ pub fn load_config() -> AppConfig {
         std::process::exit(1);
     }
 
-    let raw = fs::read_to_string(path).expect("Failed to read config");
-    toml::from_str(&raw).expect("Failed to parse config")
+    let raw = fs::read_to_string(path).expect("[-] Failed to read config");
+    
+    match toml::from_str(&raw) {
+        Ok(conf) => { conf },
+        Err(err) => {
+            eprintln!("[-] Failed to parse config : {:#?}", err);
+            process::exit(1);
+        }
+    }
 }

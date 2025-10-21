@@ -11,6 +11,8 @@ allowed_origins = [
 known_nodes = ["172.18.0.2:9042"]
 keyspace = "p2pe2e"
 
+[quic]
+port = 4433
 
 [nats]
 server = "0.0.0.0"

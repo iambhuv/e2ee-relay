@@ -7,8 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.promtuz.chat.di.appModule
 import com.promtuz.chat.di.authModule
-import com.promtuz.chat.di.dataModule
-import com.promtuz.chat.di.repoModule
 import com.promtuz.chat.navigation.AppNavigation
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.theme.PromtuzTheme
@@ -33,9 +31,7 @@ class MainActivity : ComponentActivity() {
             androidContext(this@MainActivity)
             modules(
                 appModule,
-                authModule,
-                dataModule,
-                repoModule
+                authModule
             )
         }
 

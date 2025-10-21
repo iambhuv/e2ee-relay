@@ -14,7 +14,6 @@
 struct ClientHello {
   identity_pubkey // Client::IPK
   ephemeral_pubkey // Client::EPK
-  timestamp // SystemTime in seconds
 }
 ```
 
@@ -23,8 +22,8 @@ struct ClientHello {
 - Ignore's `Client::EPK`
 - Acknowledge's `Client::IPK`
 - Creates's `Server::{EPK,ESK}`
-- Diffie Hellman's `DH(Client::EPK, Server::ESK)`
-- Epehemeral Identity Secret Key `Shared::EISK` = `HKDF(')`
+- Diffie Hellman's `DH(Client::IPK, Server::ESK)`
+- Epehemeral Identity Secret Key `Shared::EISK` = `HKDF(DH(Client::IPK, Server::ESK))`
 - Randomly Generates an Ephemeral Identity Proof `Shared::EIP`
 - Encrypts `Shared::EIP` using `Shared::EISK` with ChaCha20-Poly1305
   - Includes `ClientHello` Payload in AEAD preventing MITM/Replay Attack
@@ -41,7 +40,7 @@ struct ServerHello {
 
 - Acknowledge's `Server::EPK`
 - Derives its own copy of Epehemeral Identity Secret Key
-  - Using `DH(Client::IPK, Server::EPK)`
+  - Using `DH(Client::ISK, Server::EPK)`
 - Decrypts `Shared::EIP`
 
 ### Client Connection Payload (3)

@@ -1,5 +1,8 @@
 package com.promtuz.chat.navigation
 
+// import androidx.navigation3.runtime.remember
+// import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+// import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -18,16 +21,14 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-// import androidx.navigation3.runtime.remember
-// import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-// import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.promtuz.chat.compositions.LocalBackStack
+import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.screens.ChatScreen
 import com.promtuz.chat.ui.screens.EncryptionKeyScreen
 import com.promtuz.chat.ui.screens.WelcomeScreen
-import com.promtuz.chat.ui.theme.PromtuzTheme
 import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
 
 @Serializable
 sealed interface AppNavKey : NavKey
@@ -59,8 +60,10 @@ object AppRoutes {
 
 
 @Composable
-fun AppNavigation() {
-    val backStack = rememberNavBackStack(AppRoutes.WelcomeScreen)
+fun AppNavigation(keyManager: KeyManager = koinInject()) {
+    val backStack = rememberNavBackStack(
+        if (keyManager.hasSecretKey()) AppRoutes.App else AppRoutes.WelcomeScreen
+    )
 
     CompositionLocalProvider(LocalBackStack provides backStack) {
         NavDisplay(
@@ -106,16 +109,14 @@ fun AppNavigation() {
                 ) + fadeIn(
                     animationSpec = tween(250, easing = FastOutSlowInEasing)
                 )) togetherWith fadeOut(
-                    animationSpec = tween(250, easing = FastOutSlowInEasing),
-                    targetAlpha = 0.3f
+                    animationSpec = tween(250, easing = FastOutSlowInEasing), targetAlpha = 0.3f
                 )
             },
             popTransitionSpec = {
                 // Back: returning screen fades in from subtle state
                 // Departing screen slides out to 30% while fading out
                 fadeIn(
-                    animationSpec = tween(250, easing = FastOutSlowInEasing),
-                    initialAlpha = 0.3f
+                    animationSpec = tween(250, easing = FastOutSlowInEasing), initialAlpha = 0.3f
                 ) togetherWith (slideOutHorizontally(
                     targetOffsetX = { (it * 0.3f).toInt() },
                     animationSpec = tween(250, easing = FastOutSlowInEasing)
@@ -129,15 +130,13 @@ fun AppNavigation() {
                     initialOffsetX = { -(it * 0.2f).toInt() },
                     animationSpec = tween(250, easing = FastOutSlowInEasing)
                 ) + fadeIn(
-                    animationSpec = tween(250, easing = FastOutSlowInEasing),
-                    initialAlpha = 0.3f
+                    animationSpec = tween(250, easing = FastOutSlowInEasing), initialAlpha = 0.3f
                 )) togetherWith (slideOutHorizontally(
                     targetOffsetX = { (it * 0.3f).toInt() },
                     animationSpec = tween(250, easing = FastOutSlowInEasing)
                 ) + fadeOut(
                     animationSpec = tween(250, easing = FastOutSlowInEasing)
                 ))
-            }
-        )
+            })
     }
 }

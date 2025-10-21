@@ -121,6 +121,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
 
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.cbor)
 
 
     implementation(project.dependencies.platform(libs.koin.bom))
@@ -129,4 +130,9 @@ dependencies {
 
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.androidx.compose.navigation)
+    implementation(libs.kwik)
+
+    implementation(libs.msgpack.core)
+
+    implementation(kotlin("reflect"))
 }

@@ -1,33 +1,24 @@
 use std::error::Error;
-use std::fs;
-use std::io::ErrorKind;
 use std::io::Write;
 use std::io::stdin;
 use std::io::stdout;
+use std::net::ToSocketAddrs;
 
-use bincode::Decode;
-use bincode::Encode;
-use bincode::config::Configuration;
-use common::EncryptedData;
-use common::PublicKey;
 use common::SharedSecret;
-use common::StaticSecret;
-use common::decrypt_data;
 use common::encrypt_data;
-use common::events::client;
-use common::events::client::UnsafeSeverHello;
-use common::events::client::UnsafeSeverReject;
-use common::events::client::payloads::ServerRejectReasons;
 use common::events::server::Events;
 use common::events::server::UnsafeClientHello;
 use common::events::server::payloads::ClientHelloPayload;
-use common::events::server::payloads::ConnectPayload;
 use common::get_ephemeral_keypair;
 use common::get_shared_key;
 use common::shared::info;
 use common::shared::salts;
 use futures_util::SinkExt;
 use futures_util::StreamExt;
+use quinn::Endpoint;
+use quinn::SendStream;
+use tokio::io::AsyncReadExt;
+use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio::sync::OnceCell;
 use tokio::try_join;
@@ -36,8 +27,9 @@ use tokio_tungstenite::MaybeTlsStream;
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::tungstenite::Bytes;
 use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::tungstenite::http::StatusCode;
+use tokio_tungstenite::tungstenite::protocol::frame;
 
+use crate::quic::get_client_config;
 use crate::realtime::handshake::send_hello;
 use crate::realtime::listener;
 use crate::utils::b2h;
@@ -45,22 +37,25 @@ use crate::utils::get_user_file;
 use crate::utils::mask_key;
 use crate::utils::user::User;
 
+pub mod quic;
 pub mod realtime;
 pub mod utils;
 
 /**
  * sends payload encrypted
  */
-async fn send_msg(ws: &mut WebSocketStream<MaybeTlsStream<TcpStream>>, ev: Events) -> bool {
+async fn send_msg(tx: &mut SendStream, ev: Events) -> bool {
     let shared_secret = SHARED_SECRET.get().unwrap();
 
-    let key = get_shared_key(shared_secret, salts::EVENT, info::CLIENT_EVENT_CL_TO_SV);
+    let key = get_shared_key(shared_secret.as_bytes(), salts::EVENT, info::CLIENT_EVENT_CL_TO_SV);
 
     // Why empty ad? idk
-    let data = encrypt_data(&rmp_serde::to_vec(&ev).unwrap(), &key, &[]);
+    let data = encrypt_data(&serde_cbor::to_vec(&ev).unwrap(), &key, &[]);
 
-    let bytes = Bytes::from(rmp_serde::to_vec(&data).unwrap());
-    ws.send(Message::Binary(bytes)).await.is_err()
+    let bytes = serde_cbor::to_vec(&data).unwrap();
+
+    tx.write_all(&frame_packet(&bytes)).await.ok();
+    tx.flush().await.is_err()
 }
 
 // struct ConnectionState {
@@ -71,6 +66,11 @@ static SHARED_SECRET: OnceCell<SharedSecret> = OnceCell::const_new();
 static USER: OnceCell<User> = OnceCell::const_new();
 
 pub type WebSocket = WebSocketStream<MaybeTlsStream<TcpStream>>;
+
+fn frame_packet(packet: &[u8]) -> Vec<u8> {
+    let size: [u8; 4] = (packet.len() as u32).to_be_bytes();
+    [&size, packet].concat()
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -87,50 +87,61 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Secret [ {} ]", mask_key(&b2h(user.secret.as_bytes())));
     println!("Public [ {} ]", b2h(user.public.as_bytes()));
 
-    // Connecting to Relay Server
-    // For Realtime ofc
-    // No RESTApi btw
+    let client_config = get_client_config()?;
 
-    let (mut ws, resp) = ws::connect_async("ws://0.0.0.0:1729/socket").await?;
+    let mut endpoint = Endpoint::client("0.0.0.0:0".parse()?)?;
+    endpoint.set_default_client_config(client_config);
 
-    if resp.status() == StatusCode::SWITCHING_PROTOCOLS {
-        println!("[+] Connected to RealTime Relay Server!");
-    }
+    println!("[!] Connecting to Server...");
+
+    let addr = ("127.0.0.1", 4433).to_socket_addrs()?.next().unwrap();
+
+    let connection = endpoint
+        .connect(addr, "localhost")? // "localhost" must match cert
+        .await?;
+
+    println!("[+] Connected!");
 
     println!("[!] Waiting for Secure Channel!");
 
-    /*
-     - Connection Steps
-
-     1. Sending ClientHello
-    */
+    let (mut send, mut recv) = connection.open_bi().await?;
 
     let (esk, epk) = get_ephemeral_keypair();
 
     let mut esk = Some(esk);
 
-    send_hello(&mut ws, epk).await;
+    let hello = serde_cbor::to_vec(&UnsafeClientHello(ClientHelloPayload {
+        epk: epk.to_bytes(),
+        ipk: USER.get().unwrap().public.to_bytes(),
+    }))
+    .unwrap();
 
-    let handle = tokio::spawn(async move {
-        while let Some(packet) = ws.next().await {
-            if let Err(er) = listener(packet, &mut ws, (&mut esk, epk)).await {
+    send.write_all(&frame_packet(&hello)).await?;
+
+    println!("[!] Sent Hello Packet! {}", hex::encode(hello));
+
+    tokio::spawn(async move {
+        loop {
+            let packet_size = match recv.read_u32().await {
+                Ok(size) => size,
+                Err(_) => break, // connection closed or error
+            };
+
+            let mut packet = vec![0u8; packet_size as usize];
+
+            if recv.read_exact(&mut packet).await.is_err() {
+                break;
+            }
+
+            if let Err(er) = listener(packet, &mut send, (&mut esk, epk)).await {
                 eprintln!("{}", er);
             }
         }
     });
 
-    let mut app_running = true;
+    endpoint.wait_idle().await;
 
-    while app_running {
-        let mut input = String::new();
-        print!("[>] ");
-        stdout().flush().ok();
-        stdin().read_line(&mut input).expect("[-] IO Error");
-
-        println!("[!] NICE NICE NICE : {}", input)
-    }
-
-    try_join!(handle).ok();
+    println!("[+] Connection closed");
 
     Ok(())
 }

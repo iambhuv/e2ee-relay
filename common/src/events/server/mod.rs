@@ -7,7 +7,7 @@ use crate::events::EventTrait;
 
 pub mod payloads;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct UnsafeClientHello(pub super::server::payloads::ClientHelloPayload);
 // #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 // pub enum UnsafeEvents {
@@ -19,7 +19,7 @@ pub struct UnsafeClientHello(pub super::server::payloads::ClientHelloPayload);
 //     ClientHello(super::server::payloads::ClientHelloPayload),
 // }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Events {
     Connect(super::server::payloads::ConnectPayload),

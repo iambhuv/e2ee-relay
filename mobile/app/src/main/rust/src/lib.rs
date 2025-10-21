@@ -4,6 +4,12 @@ use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JValue};
 use jni::sys::jobject;
 
+use crate::utils::get_pair_object;
+pub mod crypto;
+pub mod insecure;
+pub mod quic;
+pub mod utils;
+
 // getStaticKey -> Java_com_promtuz_chat_native_Core_getStaticKey
 
 /* Example JNI Function
@@ -17,16 +23,15 @@ pub extern "C" fn Java_com_promtuz_rust_Core_NAME(
 }
 */
 
-
 /**
- * 
- ```kt
- Core {
-  external fun getStaticKeypair(): Pair
- }
- ```
- *
- */
+*
+```kt
+Core {
+ external fun getStaticKeypair(): Pair
+}
+```
+*
+*/
 #[unsafe(no_mangle)]
 pub extern "C" fn Java_com_promtuz_rust_Core_getStaticKeypair(
     mut env: JNIEnv,
@@ -37,54 +42,12 @@ pub extern "C" fn Java_com_promtuz_rust_Core_getStaticKeypair(
     let secret_bytes = secret.to_bytes();
     let public_bytes = public.to_bytes();
 
-    let secret_jarray = match env.byte_array_from_slice(&secret_bytes) {
-        Ok(arr) => arr,
-        Err(e) => {
-            let _ = env.throw_new(
-                "java/lang/RuntimeException",
-                format!("Failed to create secret key array: {}", e),
-            );
+    let secret_jarray = env.byte_array_from_slice(&secret_bytes).unwrap();
+    let public_jarray = env.byte_array_from_slice(&public_bytes).unwrap();
 
-            return JObject::null().into_raw();
-        }
-    };
-
-    let public_jarray = match env.byte_array_from_slice(&public_bytes) {
-        Ok(arr) => arr,
-        Err(e) => {
-            let _ = env.throw_new(
-                "java/lang/RuntimeException",
-                format!("Failed to create public key array: {}", e),
-            );
-            return JObject::null().into_raw();
-        }
-    };
-
-    let pair_class = match env.find_class("kotlin/Pair") {
-        Ok(cls) => cls,
-        Err(e) => {
-            let _ = env.throw_new(
-                "java/lang/RuntimeException",
-                format!("Failed to find Pair class: {}", e),
-            );
-            return JObject::null().into_raw();
-        }
-    };
-
-    let pair_obj = match env.new_object(
-        pair_class,
-        "(Ljava/lang/Object;Ljava/lang/Object;)V",
-        &[
-            JValue::Object(&JObject::from(secret_jarray)),
-            JValue::Object(&JObject::from(public_jarray))
-        ]
-    ) {
-        Ok(obj) => obj,
-        Err(e) => {
-            let _ = env.throw_new("java/lang/RuntimeException", format!("Failed to create Pair object: {}", e));
-            return JObject::null().into_raw();
-        }
-    };
-
-    pair_obj.into_raw()
+    get_pair_object(
+        &mut env,
+        JValue::Object(&JObject::from(secret_jarray)),
+        JValue::Object(&JObject::from(public_jarray)),
+    )
 }

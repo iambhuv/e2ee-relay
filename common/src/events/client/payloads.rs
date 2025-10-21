@@ -4,9 +4,9 @@ use crate::EncryptedData;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ServerHelloPayload {
-    pub ephemeral_pubkey: [u8; 32],
-
-    pub message: EncryptedData,
+    #[serde(with = "serde_bytes")]
+    pub epk: [u8; 32],
+    pub msg: EncryptedData,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

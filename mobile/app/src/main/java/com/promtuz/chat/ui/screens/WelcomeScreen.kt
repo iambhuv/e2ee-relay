@@ -56,8 +56,6 @@ import androidx.compose.ui.unit.sp
 import com.promtuz.chat.R
 import com.promtuz.chat.compositions.LocalBackStack
 import com.promtuz.chat.di.authModule
-import com.promtuz.chat.di.dataModule
-import com.promtuz.chat.di.repoModule
 import com.promtuz.chat.presentation.state.WelcomeField
 import com.promtuz.chat.presentation.state.WelcomeStatus
 import com.promtuz.chat.presentation.viewmodel.WelcomeViewModel
@@ -280,7 +278,7 @@ fun End2EndEncrypted(modifier: Modifier = Modifier) {
 @Composable
 @Preview
 fun WelcomeScreenPreview() {
-    KoinApplicationPreview(application = { modules(authModule, repoModule, dataModule) }) {
+    KoinApplicationPreview(application = { modules(authModule) }) {
         PromtuzTheme(darkTheme = true) {
             Box(Modifier.background(MaterialTheme.colorScheme.background)) {
                 WelcomeScreen()

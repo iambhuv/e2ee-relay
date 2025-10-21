@@ -65,7 +65,7 @@ pub fn get_user_file() -> bool {
         },
     };
 
-    USER.set(user);
+    _ = USER.set(user);
 
     is_new
 }

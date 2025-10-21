@@ -11,9 +11,9 @@ use crate::WebSocket;
 pub async fn send_hello(ws: &mut WebSocket, epk: PublicKey) {
     if ws
         .send(Message::Binary(Bytes::from(
-            rmp_serde::to_vec(&UnsafeClientHello(ClientHelloPayload {
-                ephemeral_pubkey: epk.to_bytes(),
-                identity_pubkey: USER.get().unwrap().public.to_bytes(),
+            serde_cbor::to_vec(&UnsafeClientHello(ClientHelloPayload {
+                epk: epk.to_bytes(),
+                ipk: USER.get().unwrap().public.to_bytes(),
             }))
             .unwrap(),
         )))

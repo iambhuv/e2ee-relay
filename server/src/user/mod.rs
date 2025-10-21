@@ -7,6 +7,7 @@ use scylla::errors::FirstRowError;
 
 use crate::SC_POOL;
 
+#[derive(Debug)]
 pub struct User {
     key: [u8; 32],
     created_at: Option<DateTime<Utc>>,

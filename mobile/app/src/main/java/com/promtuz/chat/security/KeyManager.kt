@@ -16,8 +16,9 @@ class KeyManager(context: Context) {
     companion object {
         private const val WRAPPER_KEY_ALIAS = "encryptor"
         private const val PREFS_NAME = "keys"
-        private const val ENCRYPTED_X25519_KEY = "pvt-key"
-        private const val X25519_IV = "pvt-iv"
+        private const val IDENTITY_SECRET = "private_identity"
+        private const val IDENTITY_SECRET_IV = "private_identity_iv"
+        private const val IDENTITY_PUBLIC = "public_identity"
     }
 
     private val keyStore: KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
@@ -30,6 +31,16 @@ class KeyManager(context: Context) {
         // keyStore.set
         if (!keyStore.containsAlias(WRAPPER_KEY_ALIAS)) {
             generateWrapperKey()
+        }
+    }
+
+    fun UNSAFE_clearKeys() {
+        prefs.edit {
+            remove(WRAPPER_KEY_ALIAS)
+            remove(PREFS_NAME)
+            remove(IDENTITY_SECRET)
+            remove(IDENTITY_SECRET_IV)
+            remove(IDENTITY_PUBLIC)
         }
     }
 
@@ -67,27 +78,44 @@ class KeyManager(context: Context) {
         return cipher.doFinal(encryptedData)
     }
 
+
+    fun storePublicKey(publicKey: ByteArray) {
+        prefs.edit {
+            putString(IDENTITY_PUBLIC, Base64.encode(publicKey))
+        }
+    }
+
     fun storeSecretKey(secretKey: ByteArray) {
         try {
             val (encryptedKey, iv) = encryptWithKeystoreKey(secretKey)
 
-            prefs.edit {
-                putString(ENCRYPTED_X25519_KEY, Base64.encode(encryptedKey))
-                putString(X25519_IV, Base64.encode(iv))
-            }
+//            prefs.edit {
+//                putString(IDENTITY_SECRET, Base64.encode(encryptedKey))
+//                putString(IDENTITY_SECRET_IV, Base64.encode(iv))
+//            }
         } finally {
             secretKey.fill(0)
         }
+    }
+
+    fun hasSecretKey(): Boolean {
+        return null != prefs.getString(IDENTITY_SECRET, null)
+                && null != prefs.getString(IDENTITY_SECRET_IV, null)
     }
 
     /**
      * Must clear the result buffer after use
      */
     fun getSecretKey(): ByteArray? {
-        val encryptedKeyStr = prefs.getString(ENCRYPTED_X25519_KEY, null) ?: return null
-        val ivStr = prefs.getString(X25519_IV, null) ?: return null
+        val encryptedKeyStr = prefs.getString(IDENTITY_SECRET, null) ?: return null
+        val ivStr = prefs.getString(IDENTITY_SECRET_IV, null) ?: return null
         val cipher = Base64.decode(encryptedKeyStr)
         val iv = Base64.decode(ivStr)
         return decryptWithKeystoreKey(cipher, iv)
+    }
+
+    fun getPublicKey(): ByteArray? {
+        val pubKeyStr = prefs.getString(IDENTITY_PUBLIC, null) ?: return null
+        return Base64.decode(pubKeyStr)
     }
 }
