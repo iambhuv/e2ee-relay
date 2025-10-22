@@ -1,3 +1,3 @@
 ## Welcome Screen
 
-![Welcome Screen](assets/welcome_screen.jpg)
+<img src="assets/welcome_screen.jpg" height="486px" alt="Welcome Screen">
