@@ -39,3 +39,27 @@ impl KeyConversion for JByteArray<'_> {
         StaticSecret::from(self.to_bytes(env))
     }
 }
+
+
+pub fn create_encrypted_data(
+    env: &mut JNIEnv,
+    nonce: Vec<u8>,
+    cipher: Vec<u8>,
+) -> Result<jobject, jni::errors::Error> {
+    // Convert to byte arrays
+    let nonce_array = env.byte_array_from_slice(&nonce)?;
+    let cipher_array = env.byte_array_from_slice(&cipher)?;
+    
+    // Since Bytes is a value class, it's erased to ByteArray at runtime
+    // So the constructor signature is still ([B[B)V
+    let obj = env.new_object(
+        "com/promtuz/rust/EncryptedData",
+        "([B[B)V",  // Still byte arrays!
+        &[
+            JValue::Object(&nonce_array.into()),
+            JValue::Object(&cipher_array.into()),
+        ],
+    )?;
+    
+    Ok(obj.into_raw())
+}

@@ -17,20 +17,16 @@ use crate::SHARED_SECRET;
 use crate::USER;
 use crate::send_msg;
 
-/// 
+///
 /// Changes Needed
-/// 
+///
 /// packet -> Vec<u8>
-/// 
+///
 /// ws -> sender
-/// 
 pub async fn listener(
     packet: Vec<u8>, tx: &mut SendStream, (esk, epk): (&mut Option<EphemeralSecret>, PublicKey),
 ) -> Result<(), Box<dyn std::error::Error>> {
     let user = USER.get().unwrap();
-    
-    println!("Unsafe Server Hello : {:?}", packet);
-
     if let Ok(data) = serde_cbor::from_slice::<UnsafeSeverHello>(&packet) {
         let payload = data.0;
 
@@ -46,8 +42,8 @@ pub async fn listener(
 
         // ! THE ONLY USE OF EISK IS TO DECRYPT MESSAGE IN HANDSHAKE
         let ephemeral_identity_shared_secret = user.secret.diffie_hellman(&server_pubkey);
-        //                                                   Client::ISK                             Server::EPK
-
+        //                                                   Client::ISK
+        // Server::EPK
 
         // payload.message
         // assuming the ad is correct, which it must be,
@@ -73,7 +69,7 @@ pub async fn listener(
             SHARED_SECRET.set(secret).ok();
         }
 
-        if send_msg(tx, Events::Connect(ConnectPayload { proof: data })).await {
+        if send_msg(tx, Events::Connect(ConnectPayload { proof: data, captcha: None })).await {
             println!("[-] Failed to send Connect Payload");
         }
     } else if let Ok(UnsafeSeverReject(reason)) =
@@ -84,8 +80,6 @@ pub async fn listener(
                     // && let Some(ref constate) = constate
                     && let Some(shared_secret) = SHARED_SECRET.get()
     {
-        println!("[!] Got Some Encrypted Data : {:?}", data);
-
         // Decrypting the data using a key with proper information
         // key used in decrypting an event sent by server to client
         match decrypt_data(
@@ -96,7 +90,7 @@ pub async fn listener(
         .map(|dat| serde_cbor::from_slice::<client::Events>(&dat))
         {
             Ok(Ok(events)) => match events {
-                client::Events::Accept() => {
+                client::Events::Accept {} => {
                     println!("SERVER ACCEPTED THE CONNECTION HURRAYY!!")
                 },
             },

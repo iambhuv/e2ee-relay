@@ -1,7 +1,4 @@
 use std::error::Error;
-use std::io::Write;
-use std::io::stdin;
-use std::io::stdout;
 use std::net::ToSocketAddrs;
 
 use common::SharedSecret;
@@ -13,24 +10,16 @@ use common::get_ephemeral_keypair;
 use common::get_shared_key;
 use common::shared::info;
 use common::shared::salts;
-use futures_util::SinkExt;
-use futures_util::StreamExt;
 use quinn::Endpoint;
 use quinn::SendStream;
 use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio::sync::OnceCell;
-use tokio::try_join;
-use tokio_tungstenite as ws;
 use tokio_tungstenite::MaybeTlsStream;
 use tokio_tungstenite::WebSocketStream;
-use tokio_tungstenite::tungstenite::Bytes;
-use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::tungstenite::protocol::frame;
 
 use crate::quic::get_client_config;
-use crate::realtime::handshake::send_hello;
 use crate::realtime::listener;
 use crate::utils::b2h;
 use crate::utils::get_user_file;
@@ -48,6 +37,8 @@ async fn send_msg(tx: &mut SendStream, ev: Events) -> bool {
     let shared_secret = SHARED_SECRET.get().unwrap();
 
     let key = get_shared_key(shared_secret.as_bytes(), salts::EVENT, info::CLIENT_EVENT_CL_TO_SV);
+
+    println!("CBOR of {:?} : {}", ev, hex::encode(&serde_cbor::to_vec(&ev).unwrap()));
 
     // Why empty ad? idk
     let data = encrypt_data(&serde_cbor::to_vec(&ev).unwrap(), &key, &[]);

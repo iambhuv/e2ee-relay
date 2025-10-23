@@ -1,23 +1,27 @@
 package com.promtuz.chat.data.remote.realtime
 
 import android.util.Log
+import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.data.remote.dto.Bytes
 import com.promtuz.chat.data.remote.events.Client
+import com.promtuz.chat.data.remote.events.ConnectionEvents
 import com.promtuz.chat.data.remote.events.Server
+import com.promtuz.chat.data.remote.events.ServerEvents
+import com.promtuz.chat.data.remote.events.eventize
 import com.promtuz.chat.data.remote.framePacket
 import com.promtuz.chat.security.KeyManager
+import com.promtuz.chat.utils.serialization.AppCbor
 import com.promtuz.rust.Crypto
+import com.promtuz.rust.EncryptedData
+import com.promtuz.rust.Info
+import com.promtuz.rust.Salts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.io.IOException
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
-import tech.kwik.core.QuicClientConnection
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -31,26 +35,34 @@ import java.nio.ByteOrder
 @OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T> cborDecode(bytes: ByteArray): T? {
     return try {
-        Cbor.decodeFromByteArray<T>(bytes)
-    } catch (_: IllegalArgumentException) {
-        null
-    } catch (_: SerializationException) {
+        AppCbor.instance.decodeFromByteArray<T>(bytes)
+    } catch (_: Exception) {
         null
     }
 }
 
 @OptIn(ExperimentalUnsignedTypes::class, ExperimentalSerializationApi::class)
 class Handshake(
-    keyManager: KeyManager, crypto: Crypto, conn: QuicClientConnection
+    val keyManager: KeyManager, val crypto: Crypto, val quicClient: QuicClient
 ) {
-    private var keyPair: EphemeralKeyPair
-    private var serverEPK: Bytes? = null
-    private var stream = conn.createStream(true)
+    private lateinit var keyPair: EphemeralKeyPair
+    private lateinit var sharedSecret: ByteArray
+
+    private var serverEphemeralPublicKey: Bytes? = null
+    private var stream = quicClient.connection?.createStream(true)
+
+
+    /**
+     * Associated Data for AEAD
+     */
+    private object AD {
+        var hello: Bytes? = null
+    }
 
 
     val serverPublicKey
         get(): Bytes? {
-            return this.serverEPK
+            return this.serverEphemeralPublicKey
         }
 
     val ephemeralKeyPair
@@ -58,11 +70,16 @@ class Handshake(
             return this.keyPair
         }
 
-    private fun listener() {
+    interface Listener {
+        fun onHandshakeSuccess(sharedSecret: ByteArray)
+        fun onHandshakeReject(reason: Server.UnsafeReject)
+        fun onHandshakeFailure(error: Exception)
+    }
+
+    private fun listener(listener: Listener) {
+        val recv = stream?.inputStream ?: return
         while (true) {
             try {
-                val recv = stream.inputStream
-
                 val packetSizeBuffer = recv.readNBytes(4)
                 val packetSize =
                     ByteBuffer.wrap(packetSizeBuffer).order(ByteOrder.BIG_ENDIAN).int.toUInt()
@@ -71,34 +88,89 @@ class Handshake(
 
                 Log.d("Handshake", "Got Packet : ${packet.toHexString()}")
 
-                when (val msg = cborDecode<Server.UnsafeHello>(packet)
-                    ?: cborDecode<Server.UnsafeReject>(packet)) {
+                when (val data = cborDecode<Server.UnsafeHello>(packet)
+                    ?: cborDecode<Server.UnsafeReject>(packet)
+                    ?: cborDecode<EncryptedData>(packet)) {
                     is Server.UnsafeHello -> {
-                        Log.e(
+                        this.serverEphemeralPublicKey = data.epk
+
+                        val isk = keyManager.getSecretKey() as ByteArray
+
+                        Log.d(
                             "Handshake",
-                            "Got UnsafeServerHello packet : UnsafeServerHello {" + "   epk: ${msg.epk.bytes.toHexString()}" + "   msg: ${msg.msg}" + "}"
+                            "Using AEAD(Hello) : ${(AD.hello as Bytes).bytes.toHexString()}"
                         )
+
+                        val proof = crypto.decryptData(
+                            data.msg.cipher.bytes,
+                            data.msg.nonce.bytes,
+                            crypto.deriveSharedKey(
+                                crypto.diffieHellman(isk, data.epk.bytes),
+                                Salts.HANDSHAKE,
+                                Info.SERVER_HANDSHAKE_SV_TO_CL
+                            ),
+                            (AD.hello as Bytes).bytes
+                        )
+
+                        Log.d("Handshake", "Proof : ${proof.toHexString()}")
+
+                        this.sharedSecret =
+                            crypto.ephemeralDiffieHellman(this.keyPair.esk, data.epk.bytes)
+
+                        val payload = quicClient.prepareMsg(
+                            ConnectionEvents.Connect(Bytes(proof)),
+                            sharedSecret = sharedSecret
+                        )
+
+                        Log.d("Handshake", "Sending Connect : ${payload.toHexString()}")
+
+                        stream?.outputStream?.write(framePacket(payload))
+                        stream?.outputStream?.flush()
                     }
 
                     is Server.UnsafeReject -> {
-                        Log.e("Handshake", "Handshake Rejected with Reason $msg")
+                        Log.e("Handshake", "Handshake Rejected with Reason $data")
+
+                        listener.onHandshakeReject(data)
                     }
 
-                    null -> {}
+                    is EncryptedData -> {
+                        when (cborDecode<ServerEvents>(
+                            eventize(
+                                crypto.decryptData(
+                                    data.cipher.bytes,
+                                    data.nonce.bytes,
+                                    crypto.deriveSharedKey(
+                                        sharedSecret,
+                                        Salts.EVENT,
+                                        Info.SERVER_EVENT_SV_TO_CL
+                                    ),
+                                    ByteArray(0)
+                                )
+                            )
+                        )) {
+                            is ConnectionEvents.Accept -> {
+                                listener.onHandshakeSuccess(sharedSecret)
+                            }
+
+                            else -> {}
+                        }
+                    }
+
+                    else -> {}
                 }
 
-            } catch (e: IOException) {
+            } catch (e: Exception) {
                 Log.e("Handshake", "QUIC Handshake Failed:", e)
+                listener.onHandshakeFailure(e)
                 break
             }
         }
     }
 
-    init {
-
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        scope.launch {
-            listener()
+    fun initialize(listener: Listener) {
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            listener(listener)
         }
 
         val keyPair = crypto.getEphemeralKeypair();
@@ -110,17 +182,11 @@ class Handshake(
                 Bytes(identityPublicKey), Bytes(this.keyPair.epk.bytes)
             )
 
-            val send = stream.outputStream
+            val payload = AppCbor.instance.encodeToByteArray(hello)
+            AD.hello = Bytes(payload)
 
-            val payload = Cbor.encodeToByteArray(hello)
-
-            val decoded = Cbor.decodeFromByteArray<Client.HelloPayload>(payload)
-            println(decoded.epk.bytes.toList())
-
-            println("Sending Payload : ${payload.toHexString()}")
-
-            send.write(framePacket(payload))
-            send.flush()
+            stream?.outputStream?.write(framePacket(payload))
+            stream?.outputStream?.flush()
         }
     }
 }

@@ -1,14 +1,19 @@
 package com.promtuz.chat.data.remote.events
 
 import com.promtuz.chat.data.remote.dto.Bytes
-import com.promtuz.chat.data.remote.dto.EncryptedData
+import com.promtuz.chat.data.remote.dto.CaptchaRequest
+import com.promtuz.rust.EncryptedData
 import kotlinx.serialization.Serializable
-
 
 object Server {
     @Serializable
     data class UnsafeHello(
-        val epk: Bytes, val msg: EncryptedData
+        /**
+         * # Server::EphemeralPublicKey
+         **/
+        val epk: Bytes,
+        val msg: EncryptedData,
+        val captcha: CaptchaRequest? = null
     )
 
     @Serializable

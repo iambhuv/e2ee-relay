@@ -11,6 +11,7 @@ use crate::SC_POOL;
 pub struct User {
     key: [u8; 32],
     created_at: Option<DateTime<Utc>>,
+    exists: Option<bool>,
 }
 
 #[derive(DeserializeRow)]
@@ -20,12 +21,12 @@ struct UserExistRow {
 
 impl User {
     pub fn new(key: [u8; 32]) -> User {
-        User { key, created_at: None }
+        User { key, created_at: None, exists: None }
     }
 
     pub fn from(pubkey: &[u8]) -> Result<User, ()> {
         let key: [u8; 32] = pubkey.try_into().map_err(|_| ())?;
-        Ok(User { key, created_at: None })
+        Ok(User { key, created_at: None, exists: None })
     }
 
     /**
@@ -43,11 +44,14 @@ impl User {
             .into_rows_result()?
             .first_row::<UserExistRow>()
         {
-            Err(FirstRowError::RowsEmpty) => Ok(false),
+            Err(FirstRowError::RowsEmpty) => {
+                self.exists = Some(false);
+                Ok(false)
+            },
             Err(err) => Err(Box::new(err)),
             Ok(user) => {
                 self.created_at = Some(user.created_at);
-
+                self.exists = Some(true);
                 Ok(true)
             },
         }

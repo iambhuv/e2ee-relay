@@ -2,6 +2,7 @@
   <dictionary name="project">
     <words>
       <w>addr</w>
+      <w>aead</w>
       <w>buttonimations</w>
       <w>deflater</w>
       <w>libcore</w>

@@ -1,5 +1,20 @@
 package com.promtuz.rust
 
+import com.promtuz.chat.data.remote.dto.Bytes
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class EncryptedData(
+    val nonce: Bytes, val cipher: Bytes
+) {
+    override fun toString(): String {
+        return "EncryptedData {\n   " +
+                "   nonce: ${this.nonce.bytes.toHexString()}\n   " +
+                "   cipher: ${this.cipher.bytes.toHexString()}\n   " +
+                "}"
+    }
+}
+
 class Crypto {
     /**
      * returns the pointer to `EphemeralSecret Key` and `Ephemeral Public Key Bytes`
@@ -21,4 +36,18 @@ class Crypto {
     external fun deriveSharedKey(
         rawKey: ByteArray, salt: String, info: String
     ): ByteArray
+
+
+    external fun decryptData(
+        cipher: ByteArray,
+        nonce: ByteArray,
+        key: ByteArray,
+        ad: ByteArray
+    ): ByteArray
+
+    external fun encryptData(
+        data: ByteArray,
+        key: ByteArray,
+        ad: ByteArray
+    ): EncryptedData
 }

@@ -11,8 +11,9 @@ sealed class WelcomeField {
 }
 
 sealed class WelcomeStatus(@param:StringRes val text: Int) {
-    object Normal : WelcomeStatus(R.string.status_continue)
-    object Trying : WelcomeStatus(R.string.status_trying)
+    object Normal : WelcomeStatus(R.string.welcome_status_normal)
+    object Generating : WelcomeStatus(R.string.welcome_status_generating)
+    object Connecting : WelcomeStatus(R.string.welcome_status_connecting)
     object Success : WelcomeStatus(R.string.status_success)
 }
 

@@ -77,7 +77,7 @@ fun WelcomeScreen(
     val context = LocalContext.current
 
     val state by vm.uiState
-    val isTryingToContinue by remember { derivedStateOf { state.status == WelcomeStatus.Trying } }
+    val isTryingToContinue by remember { derivedStateOf { state.status != WelcomeStatus.Normal } }
 
     val focusManager = LocalFocusManager.current
 
@@ -119,7 +119,6 @@ fun WelcomeScreen(
                 value = state.displayName,
                 onValueChange = { vm.onChange(WelcomeField.DisplayName, it) },
                 placeholder = stringResource(R.string.welcome_screen_example_name),
-                isError = state.errorText != null,
                 enabled = !isTryingToContinue,
                 readOnly = isTryingToContinue,
                 keyboardOptions = KeyboardOptions(

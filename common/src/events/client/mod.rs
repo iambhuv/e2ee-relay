@@ -17,10 +17,10 @@ pub struct UnsafeSeverHello(pub ServerHelloPayload);
 #[derive(Serialize, Deserialize)]
 pub struct UnsafeSeverReject(pub ServerRejectReasons);
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Events {
-    Accept(),
+    Accept {},
 }
 
 impl EventTrait for Events {}

@@ -10,7 +10,6 @@ static MQ_POOL: OnceCell<Client> = OnceCell::const_new();
 pub mod app;
 pub mod pages;
 pub mod realtime;
-pub mod routes;
 pub mod user;
 pub mod utils;
 pub mod quic;
@@ -23,8 +22,6 @@ async fn main() {
 
     app::db::scylla::connect(&config).await;
     app::mq::nats::connect(&config).await;
-
-    // app::serve(&config, get_routes()).await.expect("[-] Huh?");
     
     app::serve_quic(&config).await.expect("[-] Huh?");
 }

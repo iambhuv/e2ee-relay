@@ -9,12 +9,14 @@ import kotlinx.serialization.cbor.ByteString
 @OptIn(ExperimentalSerializationApi::class)
 value class Bytes(@ByteString val bytes: ByteArray)
 
+
 @Serializable
-@OptIn(ExperimentalSerializationApi::class)
-data class EncryptedData(
-    val nonce: Bytes, val cipher: Bytes
-) {
-    override fun toString(): String {
-        return "EncryptedData {" + "   nonce: ${this.nonce.bytes.toHexString()}" + "   cipher: ${this.cipher.bytes.toHexString()}" + "}"
-    }
+enum class CaptchaReason {
+    UnregisteredPublicKey,
+    SuspiciousActivity
 }
+
+@Serializable
+data class CaptchaRequest(
+    val reason: CaptchaReason
+)

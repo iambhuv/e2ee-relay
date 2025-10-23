@@ -2,12 +2,9 @@ use std::error::Error;
 use std::net::IpAddr;
 use std::net::Ipv4Addr;
 use std::net::SocketAddr;
-use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-// use std::sync::Arc;
-// use std::sync::Mutex;
 use axum::Router;
 use common::quic::ALPN_PROTOCALL;
 use quinn::Endpoint;
@@ -20,10 +17,8 @@ use rcgen::CertifiedKey;
 use tokio::io::AsyncReadExt;
 use tokio::sync::Mutex;
 
-use crate::quic;
 use crate::realtime;
 use crate::realtime::SocketData;
-//use crate::quic::generate_self_signed_cert;
 use crate::utils::config::AppConfig;
 
 pub async fn serve(config: &AppConfig, router: Router) -> Result<(), std::io::Error> {

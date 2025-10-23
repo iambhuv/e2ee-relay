@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::events::Captcha;
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct ClientHelloPayload {
     #[serde(with = "serde_bytes")]
@@ -18,4 +20,6 @@ pub struct ClientHelloPayload {
 pub struct ConnectPayload {
     #[serde(with = "serde_bytes")]
     pub proof: [u8; 32],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub captcha: Option<Captcha>,
 }

@@ -4,10 +4,12 @@ use common::EncryptedData;
 use common::PublicKey;
 use common::decrypt_data;
 use common::encrypt_data;
+use common::events::Captcha;
+use common::events::CaptchaReason;
 use common::events::client;
 use common::events::client::UnsafeSeverHello;
-use common::events::client::UnsafeSeverReject;
 use common::events::client::payloads::ServerHelloPayload;
+use common::events::client::payloads::ServerRejectReasons;
 use common::events::server;
 use common::get_nonce;
 use common::get_shared_key;
@@ -15,8 +17,9 @@ use common::get_static_keypair;
 use common::shared::info;
 use common::shared::salts;
 
+use crate::realtime::MessageSender;
 use crate::realtime::SocketData;
-use crate::realtime::routes::MessageSender;
+use crate::realtime::handshake_reject;
 use crate::realtime::send_msg;
 use crate::user::User;
 
@@ -33,18 +36,9 @@ pub async fn listener(
         let mut user = User::new(payload.ipk);
         let exists = user.exists().await.unwrap_or(false);
 
-        if !exists {
-            tx.send(
-                serde_cbor::to_vec(&UnsafeSeverReject(
-                    client::payloads::ServerRejectReasons::UnregisteredPublicKey,
-                ))
-                .unwrap(),
-            )
-            .await
-            .ok();
-
-            return;
-        }
+        // if !exists {
+        //     return handshake_reject(&tx, ServerRejectReasons::UnregisteredPublicKey).await;
+        // }
 
         let (s_esk, s_epk) = get_static_keypair();
 
@@ -64,6 +58,8 @@ pub async fn listener(
             identity_proof,
         });
 
+        let ad = serde_cbor::to_vec(&payload).unwrap();
+
         // Preparing Challenge for Client
         let msg = encrypt_data(
             &identity_proof,
@@ -72,12 +68,16 @@ pub async fn listener(
                 salts::HANDSHAKE,
                 info::SERVER_HANDSHAKE_SV_TO_CL,
             ),
-            &serde_cbor::to_vec(&payload).unwrap(),
+            &ad,
         );
 
-        let server_hello = ServerHelloPayload { epk: s_epk.to_bytes(), msg };
+        let hello = ServerHelloPayload {
+            epk: s_epk.to_bytes(),
+            msg,
+            captcha: (!exists).then(|| Captcha { reason: CaptchaReason::UnregisteredPublicKey }),
+        };
 
-        if tx.send(serde_cbor::to_vec(&UnsafeSeverHello(server_hello)).unwrap()).await.is_err() {
+        if tx.send(serde_cbor::to_vec(&UnsafeSeverHello(hello)).unwrap()).await.is_err() {
             return;
         }
     } else if let Ok(data) = serde_cbor::from_slice::<EncryptedData>(&bytes)
@@ -89,18 +89,23 @@ pub async fn listener(
         // key used in decrypting an event sent by client to server
         match decrypt_data(
             data,
-            &get_shared_key(&sockdat.shared_secret.to_bytes(), salts::EVENT, info::CLIENT_EVENT_CL_TO_SV),
+            &get_shared_key(
+                &sockdat.shared_secret.to_bytes(),
+                salts::EVENT,
+                info::CLIENT_EVENT_CL_TO_SV,
+            ),
             &[],
         )
         .map(|dat| serde_cbor::from_slice::<server::Events>(&dat))
         {
-            Ok(Ok(events)) => match events {
+            Ok(Ok(events)) => match &events {
                 server::Events::Connect(payload) => {
                     if payload.proof != sockdat.identity_proof {
-                        return;
+                        return handshake_reject(&tx, ServerRejectReasons::InvalidIdentityProof)
+                            .await;
                     }
-                    // Accept
-                    if send_msg(&tx, &sockdat.shared_secret, client::Events::Accept()).await {
+
+                    if send_msg(&tx, &sockdat.shared_secret, client::Events::Accept {}).await {
                         return;
                     }
 
@@ -115,6 +120,7 @@ pub async fn listener(
             _ => return,
         }
     } else {
+        println!("[?] Got Some Data : {}", hex::encode(bytes));
         // someone spamming i suppose
         return;
     }

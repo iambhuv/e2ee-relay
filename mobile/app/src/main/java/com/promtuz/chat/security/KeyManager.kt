@@ -32,6 +32,8 @@ class KeyManager(context: Context) {
         if (!keyStore.containsAlias(WRAPPER_KEY_ALIAS)) {
             generateWrapperKey()
         }
+
+        UNSAFE_clearKeys()
     }
 
     fun UNSAFE_clearKeys() {
@@ -89,10 +91,10 @@ class KeyManager(context: Context) {
         try {
             val (encryptedKey, iv) = encryptWithKeystoreKey(secretKey)
 
-//            prefs.edit {
-//                putString(IDENTITY_SECRET, Base64.encode(encryptedKey))
-//                putString(IDENTITY_SECRET_IV, Base64.encode(iv))
-//            }
+            prefs.edit {
+                putString(IDENTITY_SECRET, Base64.encode(encryptedKey))
+                putString(IDENTITY_SECRET_IV, Base64.encode(iv))
+            }
         } finally {
             secretKey.fill(0)
         }
