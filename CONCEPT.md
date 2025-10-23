@@ -19,7 +19,7 @@ struct ClientHello {
 
 ### Server: To Client's First Payload
 
-- Ignore's `Client::EPK`
+- ~~Ignore's~~ Acknowledge's `Client::EPK`
 - Acknowledge's `Client::IPK`
 - Creates's `Server::{EPK,ESK}`
 - Diffie Hellman's `DH(Client::IPK, Server::ESK)`
