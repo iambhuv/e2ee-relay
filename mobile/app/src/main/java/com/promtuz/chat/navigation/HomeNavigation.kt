@@ -80,7 +80,7 @@ fun HomeNavigation() {
                         when (key) {
                             is HomeRoutes.HomeScreen -> {
                                 NavEntry(key = key) {
-                                    HomeScreen(hazeState, innerPadding) { scrollState.value = it }
+                                    HomeScreen(hazeState, innerPadding)
                                 }
                             }
 
@@ -121,18 +121,18 @@ fun HomeNavigation() {
                         )
                     }
                 )
-                BlurredBars(
-                    hazeState,
-                    // scrollState,
-                    innerPadding.calculateTopPadding(),
-                    Alignment.TopCenter
-                )
-                BlurredBars(
-                    hazeState,
-                    // scrollState,
-                    innerPadding.calculateBottomPadding(),
-                    Alignment.BottomCenter
-                )
+//                BlurredBars(
+//                    hazeState,
+//                    // scrollState,
+//                    innerPadding.calculateTopPadding(),
+//                    Alignment.TopCenter
+//                )
+//                BlurredBars(
+//                    hazeState,
+//                    // scrollState,
+//                    innerPadding.calculateBottomPadding(),
+//                    Alignment.BottomCenter
+//                )
             }
         }
     }

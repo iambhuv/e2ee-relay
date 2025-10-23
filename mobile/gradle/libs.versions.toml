@@ -13,17 +13,18 @@ ktorClient = "3.3.1"
 kwik = "0.10.6"
 lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
-composeBom = "2025.10.00"
+composeBom = "2025.10.01"
 
-material3 = "1.5.0-alpha06"
+material = "1.13.0"
+material3 = "1.5.0-alpha07"
 
 moshipack = "1.0.1"
 msgpackCore = "0.9.10"
-nav3Core = "1.0.0-alpha11"
+nav3Core = "1.0.0-beta01"
 lifecycleViewmodelNav3 = "1.0.0-alpha04"
 kotlinxSerializationCore = "1.9.0"
 kotlinSerialization = "2.2.20"
-room = "2.8.2"
+room = "2.8.3"
 
 koin-bom = "4.1.1"
 
@@ -44,6 +45,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 kotlinx-serialization-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor", version.ref = "kotlinxSerializationCBOR" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClient" }

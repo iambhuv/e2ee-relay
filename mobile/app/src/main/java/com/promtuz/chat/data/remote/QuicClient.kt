@@ -58,9 +58,9 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
     private val addr = Pair("192.168.100.137", 4433)
     var connection: QuicClientConnection? = null
 
-    private lateinit var handshake: Handshake
+    lateinit var handshake: Handshake
 
-    private lateinit var sharedSecret: ByteArray
+    lateinit var sharedSecret: ByteArray
 
     interface Listener {
         fun onConnectionSuccess()
@@ -78,54 +78,54 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
+    suspend fun connectScoped(context: Context, listener: Listener) {
+        try {
+            if (!hasInternetConnectivity(context)) {
+                return listener.onConnectionFailure(ConnectionError.NoInternet)
+            }
+
+            if (connection !== null) {
+                connection?.close(1001, "Reinitiating Connection")
+            }
+
+            val conn =
+                QuicClientConnection.newBuilder().version(QuicConnection.QuicVersion.V1)
+                    .uri(URI("https://${addr.first}:${addr.second}"))
+                    .applicationProtocol("ProtoCall")
+                    .noServerCertificateCheck()
+                    .maxIdleTimeout(Duration.ofHours(1))
+                    .build()
+
+            connection = conn
+
+            conn.connect()
+
+            handshake = Handshake(get(), get(), this@QuicClient)
+            handshake.initialize(object : Handshake.Listener {
+                override fun onHandshakeSuccess(sharedSecret: ByteArray) {
+                    this@QuicClient.sharedSecret = sharedSecret
+                    listener.onConnectionSuccess()
+                }
+
+                override fun onHandshakeReject(reason: Server.UnsafeReject) {
+                    listener.onConnectionFailure(ConnectionError.HandshakeFailed("Connection Rejected : $reason"))
+                }
+
+                override fun onHandshakeFailure(error: Exception) {
+                    listener.onConnectionFailure(ConnectionError.Unknown(error))
+                }
+            })
+
+        } catch (e: Exception) {
+            listener.onConnectionFailure(ConnectionError.Unknown(e))
+
+            Log.e("QuicClient", "Failed to Connect : $e")
+        }
+    }
+
     fun connect(context: Context, listener: Listener) {
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                if (!hasInternetConnectivity(context)) {
-                    return@launch listener.onConnectionFailure(ConnectionError.NoInternet)
-                }
-
-                if (connection !== null) {
-                    connection?.close(1001, "Reinitiating Connection")
-                }
-
-                val conn =
-                    QuicClientConnection.newBuilder().version(QuicConnection.QuicVersion.V1)
-                        .uri(URI("https://${addr.first}:${addr.second}"))
-                        .applicationProtocol("ProtoCall")
-                        .noServerCertificateCheck()
-                        .maxIdleTimeout(Duration.ofHours(1))
-                        .build()
-
-                connection = conn
-
-                conn.connect()
-
-                handshake = Handshake(get(), get(), this@QuicClient)
-                handshake.initialize(object : Handshake.Listener {
-                    override fun onHandshakeSuccess(sharedSecret: ByteArray) {
-                        this@QuicClient.sharedSecret = sharedSecret
-                        listener.onConnectionSuccess()
-                    }
-
-                    override fun onHandshakeReject(reason: Server.UnsafeReject) {
-                        listener.onConnectionFailure(ConnectionError.HandshakeFailed("Connection Rejected : $reason"))
-
-                        throw RuntimeException("Connection Rejected with Reason $reason")
-                    }
-
-                    override fun onHandshakeFailure(error: Exception) {
-                        listener.onConnectionFailure(ConnectionError.Unknown(error))
-
-                        throw RuntimeException("Connection Failed : ", error)
-                    }
-                })
-
-            } catch (e: Exception) {
-                listener.onConnectionFailure(ConnectionError.Unknown(e))
-
-                Log.e("QuicClient", "Failed to Connect : $e")
-            }
+            connectScoped(context, listener)
         }
     }
 

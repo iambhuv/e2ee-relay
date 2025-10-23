@@ -43,7 +43,9 @@ inline fun <reified T> cborDecode(bytes: ByteArray): T? {
 
 @OptIn(ExperimentalUnsignedTypes::class, ExperimentalSerializationApi::class)
 class Handshake(
-    val keyManager: KeyManager, val crypto: Crypto, val quicClient: QuicClient
+    private val keyManager: KeyManager,
+    private val crypto: Crypto,
+    private val quicClient: QuicClient
 ) {
     private lateinit var keyPair: EphemeralKeyPair
     private lateinit var sharedSecret: ByteArray
@@ -161,8 +163,10 @@ class Handshake(
                 }
 
             } catch (e: Exception) {
-                Log.e("Handshake", "QUIC Handshake Failed:", e)
-                listener.onHandshakeFailure(e)
+                if ("Connection closed" !in e.toString()) {
+                    Log.e("Handshake", "QUIC Handshake Failed:", e)
+                    listener.onHandshakeFailure(e)
+                }
                 break
             }
         }

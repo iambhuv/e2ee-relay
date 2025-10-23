@@ -55,7 +55,7 @@ class WelcomeViewModel(
      * 4. Connecting to Relay Server
      * 5. Finish Welcome.
      **/
-    fun `continue`() {
+    fun `continue`(onSuccess: () -> Unit) {
         onChange(WelcomeField.Status, WelcomeStatus.Generating)
 
         // Step 1.
@@ -93,13 +93,15 @@ class WelcomeViewModel(
                     }
 
                     is ConnectionError.Unknown -> {
-                        onChange(WelcomeField.Error, e)
+                        onChange(WelcomeField.Error, e.exception.toString())
                     }
                 }
             }
 
             override fun onConnectionSuccess() {
                 onChange(WelcomeField.Status, WelcomeStatus.Success)
+
+                onSuccess()
             }
         })
 

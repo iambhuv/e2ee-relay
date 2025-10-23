@@ -1,5 +1,7 @@
 package com.promtuz.chat.ui.screens
 
+import android.app.Activity
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -53,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.promtuz.chat.MainActivity
 import com.promtuz.chat.R
 import com.promtuz.chat.compositions.LocalBackStack
 import com.promtuz.chat.di.authModule
@@ -159,7 +162,10 @@ fun WelcomeScreen(
 
             Button(
                 {
-                    vm.`continue`()
+                    vm.`continue` {
+                        context.startActivity(Intent(context, MainActivity::class.java))
+                        (context as? Activity)?.finish()
+                    }
                 },
                 Modifier.fillMaxWidth(),
             ) {

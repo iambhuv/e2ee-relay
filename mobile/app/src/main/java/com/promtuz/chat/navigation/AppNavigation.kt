@@ -26,7 +26,6 @@ import com.promtuz.chat.compositions.LocalBackStack
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.screens.ChatScreen
 import com.promtuz.chat.ui.screens.EncryptionKeyScreen
-import com.promtuz.chat.ui.screens.WelcomeScreen
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 
@@ -62,7 +61,7 @@ object AppRoutes {
 @Composable
 fun AppNavigation(keyManager: KeyManager = koinInject()) {
     val backStack = rememberNavBackStack(
-        if (keyManager.hasSecretKey()) AppRoutes.App else AppRoutes.WelcomeScreen
+        AppRoutes.App
     )
 
     CompositionLocalProvider(LocalBackStack provides backStack) {
@@ -87,10 +86,6 @@ fun AppNavigation(keyManager: KeyManager = koinInject()) {
 
                     is AppRoutes.ChatScreen -> {
                         NavEntry(key, content = { ChatScreen(key.userId) })
-                    }
-
-                    is AppRoutes.WelcomeScreen -> {
-                        NavEntry(key, content = { WelcomeScreen() })
                     }
 
                     is AppRoutes.EncryptionKeyScreen -> {

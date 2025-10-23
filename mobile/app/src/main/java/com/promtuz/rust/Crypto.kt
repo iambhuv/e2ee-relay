@@ -15,7 +15,7 @@ data class EncryptedData(
     }
 }
 
-class Crypto {
+class Crypto(private val core: Core) {
     /**
      * returns the pointer to `EphemeralSecret Key` and `Ephemeral Public Key Bytes`
      */

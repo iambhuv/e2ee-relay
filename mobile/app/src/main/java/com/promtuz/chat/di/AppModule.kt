@@ -13,7 +13,7 @@ import org.koin.core.module.dsl.viewModel
 val appModule = module {
     single<KeyManager> { KeyManager(androidContext()) }
     single { Core() }
-    single { Crypto() }
+    single { Crypto(get()) }
 
     single { QuicClient(get(), get()) }
 

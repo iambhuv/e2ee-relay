@@ -33,7 +33,7 @@ class KeyManager(context: Context) {
             generateWrapperKey()
         }
 
-        UNSAFE_clearKeys()
+        // UNSAFE_clearKeys()
     }
 
     fun UNSAFE_clearKeys() {
