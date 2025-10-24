@@ -2,16 +2,14 @@ use std::fs;
 use std::io::ErrorKind;
 
 use bincode::config::Configuration;
-use common::events::client::payloads::ServerRejectReasons;
 use common::PublicKey;
 use common::StaticSecret;
 use common::derive_public_key;
 use common::get_secret_key;
-use tokio_tungstenite::tungstenite::Utf8Bytes;
 
+use crate::USER;
 use crate::utils::user::User;
 use crate::utils::user::UserFile;
-use crate::USER;
 
 pub mod user;
 
@@ -31,7 +29,7 @@ pub fn gen_user_credentials() -> User {
 
 pub fn store_user(user: User) -> User {
     let userbin = bincode::encode_to_vec(
-        &UserFile(user.public.to_bytes(), user.secret.to_bytes()),
+        UserFile(user.public.to_bytes(), user.secret.to_bytes()),
         bincode::config::standard(),
     )
     .expect("Unexpected Bincode Error");
@@ -75,7 +73,7 @@ pub fn symmetric_split_range(n: usize, i: usize) -> std::ops::Range<usize> {
 }
 
 pub fn mask_key(key: &String) -> String {
-    let mask_range = symmetric_split_range(key.len(), key.len() - (key.len() / 4) as usize);
+    let mask_range = symmetric_split_range(key.len(), key.len() - (key.len() / 4));
     let mask_len = mask_range.len();
     let mut str = String::from(key);
 

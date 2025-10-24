@@ -17,12 +17,13 @@ use crate::SHARED_SECRET;
 use crate::USER;
 use crate::send_msg;
 
-///
-/// Changes Needed
-///
-/// packet -> Vec<u8>
-///
-/// ws -> sender
+
+//
+// Changes Needed
+//
+// packet -> Vec<u8>
+//
+// ws -> sender
 pub async fn listener(
     packet: Vec<u8>, tx: &mut SendStream, (esk, epk): (&mut Option<EphemeralSecret>, PublicKey),
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -40,11 +41,6 @@ pub async fn listener(
         })
         .unwrap();
 
-        // ! THE ONLY USE OF EISK IS TO DECRYPT MESSAGE IN HANDSHAKE
-        let ephemeral_identity_shared_secret = user.secret.diffie_hellman(&server_pubkey);
-        //                                                   Client::ISK
-        // Server::EPK
-
         // payload.message
         // assuming the ad is correct, which it must be,
         // assuming its 32 byte which it must be
@@ -53,7 +49,7 @@ pub async fn listener(
             // Temporary Because the info is Server->Client
             // Decrypts Server's Response, wont sent
             &get_shared_key(
-                &ephemeral_identity_shared_secret.as_bytes(),
+                user.secret.diffie_hellman(&server_pubkey).as_bytes(),
                 salts::HANDSHAKE,
                 info::SERVER_HANDSHAKE_SV_TO_CL,
             ),

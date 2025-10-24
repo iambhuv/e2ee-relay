@@ -17,6 +17,7 @@ use common::get_static_keypair;
 use common::shared::info;
 use common::shared::salts;
 
+use crate::MQ_POOL;
 use crate::realtime::MessageSender;
 use crate::realtime::SocketData;
 use crate::realtime::handshake_reject;
@@ -74,12 +75,10 @@ pub async fn listener(
         let hello = ServerHelloPayload {
             epk: s_epk.to_bytes(),
             msg,
-            captcha: (!exists).then(|| Captcha { reason: CaptchaReason::UnregisteredPublicKey }),
+            captcha: (!exists).then_some(Captcha { reason: CaptchaReason::UnregisteredPublicKey }),
         };
 
-        if tx.send(serde_cbor::to_vec(&UnsafeSeverHello(hello)).unwrap()).await.is_err() {
-            return;
-        }
+        _ = tx.send(serde_cbor::to_vec(&UnsafeSeverHello(hello)).unwrap()).await;
     } else if let Ok(data) = serde_cbor::from_slice::<EncryptedData>(&bytes)
         && let Some(sockdat) = sockdat.lock().await.as_ref()
     {
@@ -87,7 +86,7 @@ pub async fn listener(
 
         // Decrypting the data using a key with proper information
         // key used in decrypting an event sent by client to server
-        match decrypt_data(
+        if let Ok(Ok(events)) = decrypt_data(
             data,
             &get_shared_key(
                 &sockdat.shared_secret.to_bytes(),
@@ -98,30 +97,27 @@ pub async fn listener(
         )
         .map(|dat| serde_cbor::from_slice::<server::Events>(&dat))
         {
-            Ok(Ok(events)) => match &events {
+            match &events {
                 server::Events::Connect(payload) => {
                     if payload.proof != sockdat.identity_proof {
-                        return handshake_reject(&tx, ServerRejectReasons::InvalidIdentityProof)
+                        return handshake_reject(tx, ServerRejectReasons::InvalidIdentityProof)
                             .await;
                     }
 
-                    if send_msg(&tx, &sockdat.shared_secret, client::Events::Accept {}).await {
+                    if send_msg(tx, &sockdat.shared_secret, client::Events::Accept {}).await {
                         return;
                     }
 
                     // WINDOW AFTER CONN ACCEPT
 
-                    // let nats = MQ_POOL.get().unwrap();
+                    let _ = MQ_POOL.get().unwrap();
                     //nats.publish(subject, payload)
                     // nats.send(PublishMessage { subject: "real".into(), payload: (),
                     // reply: (), headers: () });
                 },
-            },
-            _ => return,
+            }
         }
     } else {
-        println!("[?] Got Some Data : {}", hex::encode(bytes));
-        // someone spamming i suppose
-        return;
+        println!("[?] Got Some Data : {}", hex::encode(bytes))
     }
 }

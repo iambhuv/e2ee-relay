@@ -39,7 +39,7 @@ pub struct SocketData {
 pub async fn send_msg(ws: &MessageSender, shared_secret: &SharedSecret, ev: Events) -> bool {
     let key = get_shared_key(shared_secret.as_bytes(), salts::EVENT, info::SERVER_EVENT_SV_TO_CL);
 
-    println!("CBOR of {:?} : {}", ev, hex::encode(&serde_cbor::to_vec(&ev).unwrap()));
+    println!("CBOR of {:?} : {}", ev, hex::encode(serde_cbor::to_vec(&ev).unwrap()));
 
     let data = encrypt_data(&serde_cbor::to_vec(&ev).unwrap(), &key, &[]);
 

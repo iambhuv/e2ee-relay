@@ -42,6 +42,6 @@ impl User {
             },
         };
 
-        return true;
+        true
     }
 }

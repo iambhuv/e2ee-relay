@@ -24,9 +24,8 @@ impl User {
         User { key, created_at: None, exists: None }
     }
 
-    pub fn from(pubkey: &[u8]) -> Result<User, ()> {
-        let key: [u8; 32] = pubkey.try_into().map_err(|_| ())?;
-        Ok(User { key, created_at: None, exists: None })
+    pub fn from(pubkey: &[u8]) -> Option<User> {
+        Some(User { key: pubkey.try_into().ok()?, created_at: None, exists: None })
     }
 
     /**

@@ -38,7 +38,7 @@ async fn send_msg(tx: &mut SendStream, ev: Events) -> bool {
 
     let key = get_shared_key(shared_secret.as_bytes(), salts::EVENT, info::CLIENT_EVENT_CL_TO_SV);
 
-    println!("CBOR of {:?} : {}", ev, hex::encode(&serde_cbor::to_vec(&ev).unwrap()));
+    println!("CBOR of {:?} : {}", ev, hex::encode(serde_cbor::to_vec(&ev).unwrap()));
 
     // Why empty ad? idk
     let data = encrypt_data(&serde_cbor::to_vec(&ev).unwrap(), &key, &[]);
@@ -112,12 +112,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("[!] Sent Hello Packet! {}", hex::encode(hello));
 
     tokio::spawn(async move {
-        loop {
-            let packet_size = match recv.read_u32().await {
-                Ok(size) => size,
-                Err(_) => break, // connection closed or error
-            };
-
+        while let Ok(packet_size) = recv.read_u32().await {
             let mut packet = vec![0u8; packet_size as usize];
 
             if recv.read_exact(&mut packet).await.is_err() {

@@ -89,11 +89,7 @@ pub async fn serve_quic(config: &AppConfig) -> Result<(), Box<dyn Error>> {
                         });
                         let tx_msg = tx_msg.clone();
                         let rx_handle = tokio::spawn(async move {
-                            loop {
-                                let packet_size = match recv.read_u32().await {
-                                    Ok(size) => size,
-                                    Err(_) => break,
-                                };
+                            while let Ok(packet_size) = recv.read_u32().await {
                                 let mut packet = vec![0u8; packet_size as usize];
                                 if let Err(err) = recv.read_exact(&mut packet).await {
                                     println!("Read failed : {}", err); // temp

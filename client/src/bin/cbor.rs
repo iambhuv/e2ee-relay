@@ -3,7 +3,7 @@ use common::events::server::payloads::ClientHelloPayload;
 use common::get_ephemeral_keypair;
 
 fn main() {
-    let (esk, epk) = get_ephemeral_keypair();
+    let (_, epk) = get_ephemeral_keypair();
 
     let hello = &UnsafeClientHello(ClientHelloPayload {
         epk: epk.to_bytes(),
