@@ -26,8 +26,7 @@ pub async fn serve(config: &AppConfig, router: Router) -> Result<(), std::io::Er
         IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
         config.server.port,
     ))
-    .await
-    .unwrap();
+    .await?;
 
     println!("[+] Listening at http://0.0.0.0:{}", config.server.port);
 

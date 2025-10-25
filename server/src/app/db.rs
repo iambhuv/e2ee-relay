@@ -11,14 +11,20 @@ pub mod scylla {
             sbuilder = sbuilder.known_node(snode);
         }
 
-        let scylla_session = sbuilder.build().await.expect("[-] Failed to connect scylla");
-        scylla_session.use_keyspace(&config.scylla.keyspace, true).await.ok();
+        if let Ok(scylla_session) = sbuilder.build().await {
+            _ = scylla_session
+                .use_keyspace(&config.scylla.keyspace, true)
+                .await
+                .inspect_err(|e| eprintln!("[-] Failed to set scylla keyspace: {}", e));
 
-        println!("[+] Connected to ScyllaDB : true");
-        scylla_session.get_cluster_state().get_nodes_info().iter().for_each(|node| {
-            println!("[+] *Cluster [{}] Connected : {}", node.address, node.is_connected())
-        });
+            println!("[+] Connected to ScyllaDB : true");
+            scylla_session.get_cluster_state().get_nodes_info().iter().for_each(|node| {
+                println!("[+] *Cluster [{}] Connected : {}", node.address, node.is_connected())
+            });
 
-        SC_POOL.set(scylla_session).unwrap();
+            _ = SC_POOL.set(scylla_session);
+        } else {
+            eprintln!("[-] Failed to connect scylla")
+        }
     }
 }

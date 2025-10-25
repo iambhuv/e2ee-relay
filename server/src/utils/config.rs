@@ -45,13 +45,16 @@ pub fn load_config() -> AppConfig {
         std::process::exit(1);
     }
 
-    let raw = fs::read_to_string(path).expect("[-] Failed to read config");
-
-    match toml::from_str(&raw) {
-        Ok(conf) => conf,
-        Err(err) => {
-            eprintln!("[-] Failed to parse config : {:#?}", err);
-            process::exit(1);
-        },
+    if let Ok(raw) = fs::read_to_string(path) {
+        match toml::from_str(&raw) {
+            Ok(conf) => conf,
+            Err(err) => {
+                eprintln!("[-] Failed to parse config : {:#?}", err);
+                process::exit(1);
+            },
+        }
+    } else {
+        eprintln!("[-] Failed to read config");
+        process::exit(1);
     }
 }

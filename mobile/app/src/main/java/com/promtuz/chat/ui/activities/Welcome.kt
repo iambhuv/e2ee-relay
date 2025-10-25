@@ -9,7 +9,7 @@ import com.promtuz.chat.ui.screens.WelcomeScreen
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import org.koin.android.ext.android.inject
 
-class WelcomeActivity : ComponentActivity() {
+class Welcome : ComponentActivity() {
     private lateinit var keyManager: KeyManager
 
     override fun onCreate(savedInstanceState: Bundle?) {

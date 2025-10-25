@@ -49,8 +49,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("debug")
         }
@@ -71,12 +70,18 @@ android {
 tasks.register<Exec>("buildRustCore") {
     workingDir = file("src/main/rust")
     commandLine(
-        "cargo", "ndk",
-        "-t", "armeabi-v7a",
-        "-t", "arm64-v8a",
-        "-t", "x86",
-        "-t", "x86_64",
-        "-o", "../jniLibs",
+        "cargo",
+        "ndk",
+        "-t",
+        "armeabi-v7a",
+        "-t",
+        "arm64-v8a",
+        "-t",
+        "x86",
+        "-t",
+        "x86_64",
+        "-o",
+        "../jniLibs",
         "build",
         "--release"
     )
@@ -87,6 +92,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.constraintlayout.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -96,6 +102,7 @@ dependencies {
     implementation(libs.haze.materials)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.camera.lifecycle)
 
     ksp(libs.room.compiler)
 
@@ -136,4 +143,14 @@ dependencies {
     implementation(libs.msgpack.core)
 
     implementation(kotlin("reflect"))
+
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.video)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.mlkit.vision)
+    implementation(libs.androidx.camera.extensions)
+
+    implementation(libs.barcode.scanning)
 }

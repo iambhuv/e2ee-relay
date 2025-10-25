@@ -1,15 +1,13 @@
 package com.promtuz.chat.data.remote
 
-import android.Manifest
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
-import androidx.annotation.RequiresPermission
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import com.promtuz.chat.data.remote.events.ClientEvents
-import com.promtuz.chat.data.remote.events.ConnectionEvents
 import com.promtuz.chat.data.remote.events.Server
-import com.promtuz.chat.data.remote.events.ServerEvents
 import com.promtuz.chat.data.remote.realtime.Handshake
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.utils.serialization.AppCbor
@@ -19,7 +17,6 @@ import com.promtuz.rust.Salts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
@@ -27,8 +24,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import tech.kwik.core.QuicClientConnection
 import tech.kwik.core.QuicConnection
-import java.net.InetSocketAddress
-import java.net.Socket
 import java.net.URI
 import java.time.Duration
 
@@ -54,13 +49,27 @@ sealed class ConnectionError {
     data class Unknown(val exception: Exception) : ConnectionError()
 }
 
+enum class ConnectionStatus {
+    Disconnected,
+    Connecting,
+    NetworkError,
+    HandshakeFailed,
+    Connected
+}
+
 class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto) : KoinComponent {
-    private val addr = Pair("192.168.100.137", 4433)
+    //    private val addr = Pair("192.168.100.137", 4433)
+    private val addr = Pair("arch.local", 4433)
     var connection: QuicClientConnection? = null
 
-    lateinit var handshake: Handshake
+    private var _status = mutableStateOf(ConnectionStatus.Disconnected)
+    val status: State<ConnectionStatus> get() = _status
 
-    lateinit var sharedSecret: ByteArray
+
+    private lateinit var _handshake: Handshake
+    val handshake: Handshake? get() = if (::_handshake.isInitialized) _handshake else null
+
+    private lateinit var sharedSecret: ByteArray
 
     interface Listener {
         fun onConnectionSuccess()
@@ -81,12 +90,16 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
     suspend fun connectScoped(context: Context, listener: Listener) {
         try {
             if (!hasInternetConnectivity(context)) {
+                _status.value = ConnectionStatus.NetworkError
                 return listener.onConnectionFailure(ConnectionError.NoInternet)
             }
 
             if (connection !== null) {
                 connection?.close(1001, "Reinitiating Connection")
+                _status.value = ConnectionStatus.Disconnected
             }
+
+            _status.value = ConnectionStatus.Connecting
 
             val conn =
                 QuicClientConnection.newBuilder().version(QuicConnection.QuicVersion.V1)
@@ -100,24 +113,30 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
 
             conn.connect()
 
-            handshake = Handshake(get(), get(), this@QuicClient)
-            handshake.initialize(object : Handshake.Listener {
+            _handshake = Handshake(get(), get(), this@QuicClient)
+            _handshake.initialize(object : Handshake.Listener {
                 override fun onHandshakeSuccess(sharedSecret: ByteArray) {
                     this@QuicClient.sharedSecret = sharedSecret
                     listener.onConnectionSuccess()
+
+                    _status.value = ConnectionStatus.Connected
                 }
 
                 override fun onHandshakeReject(reason: Server.UnsafeReject) {
                     listener.onConnectionFailure(ConnectionError.HandshakeFailed("Connection Rejected : $reason"))
+                    _status.value = ConnectionStatus.HandshakeFailed
                 }
 
                 override fun onHandshakeFailure(error: Exception) {
                     listener.onConnectionFailure(ConnectionError.Unknown(error))
+                    _status.value = ConnectionStatus.HandshakeFailed
                 }
             })
 
         } catch (e: Exception) {
             listener.onConnectionFailure(ConnectionError.Unknown(e))
+
+            _status.value = ConnectionStatus.Disconnected
 
             Log.e("QuicClient", "Failed to Connect : $e")
         }

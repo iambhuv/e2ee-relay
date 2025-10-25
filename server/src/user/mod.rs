@@ -32,7 +32,7 @@ impl User {
      * Does user exist in database?
      */
     pub async fn exists(&mut self) -> Result<bool, Box<dyn Error>> {
-        let scylla = SC_POOL.get().unwrap();
+        let scylla = SC_POOL.get().ok_or("[-] RuntimeError: Failed to collect scylla session")?;
 
         match scylla
             .query_unpaged(

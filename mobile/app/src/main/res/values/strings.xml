@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">Promtuz</string>
 
+    <string name="app_status_connecting">Connecting…</string>
+    <string name="app_status_handshake_fail">Failed…</string>
+    <string name="app_status_connected">Connected</string>
+
     <string name="status_continue">Continue</string>
     <string name="status_trying">Please Wait…</string>
     <string name="status_success">Success</string>

@@ -6,10 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.promtuz.chat.data.remote.ConnectionError
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.security.KeyManager
-import com.promtuz.chat.ui.activities.WelcomeActivity
+import com.promtuz.chat.ui.activities.App
+import com.promtuz.chat.ui.activities.Welcome
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -35,17 +35,12 @@ class LauncherActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 if (keyManager.hasSecretKey()) {
-                    quicClient.connectScoped(this@LauncherActivity, object : QuicClient.Listener {
-                        override fun onConnectionSuccess() {}
-                        override fun onConnectionFailure(e: ConnectionError) {}
-                    })
-
                     startActivity(
-                        Intent(this@LauncherActivity, MainActivity::class.java)
+                        Intent(this@LauncherActivity, App::class.java)
                     )
                 } else {
                     startActivity(
-                        Intent(this@LauncherActivity, WelcomeActivity::class.java)
+                        Intent(this@LauncherActivity, Welcome::class.java)
                     )
                 }
 

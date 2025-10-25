@@ -1,5 +1,7 @@
 [versions]
 agp = "8.12.3"
+barcodeScanning = "17.3.0"
+constraintlayoutCompose = "1.1.1"
 coreSplashscreen = "1.0.1"
 hazeMaterials = "1.6.10"
 kotlin = "2.2.20"
@@ -18,7 +20,6 @@ composeBom = "2025.10.01"
 material = "1.13.0"
 material3 = "1.5.0-alpha07"
 
-moshipack = "1.0.1"
 msgpackCore = "0.9.10"
 nav3Core = "1.0.0-beta01"
 lifecycleViewmodelNav3 = "1.0.0-alpha04"
@@ -26,11 +27,23 @@ kotlinxSerializationCore = "1.9.0"
 kotlinSerialization = "2.2.20"
 room = "2.8.3"
 
+cameraCore = "1.6.0-alpha01"
+
 koin-bom = "4.1.1"
+cameraLifecycle = "1.5.1"
 
 [libraries]
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
+androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraCore" }
+androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCore" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCore" }
+androidx-camera-mlkit-vision = { module = "androidx.camera:camera-mlkit-vision", version.ref = "cameraCore" }
+androidx-camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraCore" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCore" }
+androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "hazeMaterials" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -70,6 +83,7 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-androidx-compose-navigation = { module = "io.insert-koin:koin-androidx-compose-navigation" }
+camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraLifecycle" }
 
 
 [plugins]

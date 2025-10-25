@@ -1,25 +1,24 @@
 package com.promtuz.chat.ui.screens
 
+import androidx.activity.compose.LocalActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.font.*
+import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.*
+import com.promtuz.chat.data.remote.ConnectionError
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.security.KeyManager
+import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -30,47 +29,42 @@ import org.koin.compose.koinInject
 fun HomeScreen(
     hazeState: HazeState, innerPadding: PaddingValues, quicClient: QuicClient = koinInject()
 ) {
+    val activity = LocalActivity.current as AppCompatActivity
+
+    quicClient.connect(LocalContext.current, object : QuicClient.Listener {
+        override fun onConnectionFailure(e: ConnectionError) {
+
+        }
+
+        override fun onConnectionSuccess() {
+
+        }
+    })
+
     Box {
         Column(Modifier.hazeSource(hazeState)) {
-            // val listState = rememberLazyListState()
-
             StatsBox(innerPadding)
 
-//            val chats = remember {
-//                arrayOf(
-//                    "Averal Purwar",
-//                    "Aftab Shaikh",
-//                    "Criminal",
-//                    "Shaurya Ranjan",
-//                    "Kabir",
-//                    "Dynoxy",
-//                )
-//            }
-//
-//
-//            LazyColumn(
-//                state = listState,
-//                contentPadding = PaddingValues(
-//                    top = innerPadding.calculateTopPadding(),
-//                    bottom = innerPadding.calculateBottomPadding()
-//                ),
-//                modifier = Modifier
-//                    .fillMaxSize()
-//            ) {
-//                items(chats.size) { index ->
-//                    val peer = chats[index];
-//                    HomeListItem(peer)
-//                }
-//            }
+            val qrScanner = remember {
+                QrScanner({ bytes ->
+
+                }, { e ->
+
+                })
+            }
+
+            Button({
+                qrScanner.show(activity.supportFragmentManager, "QR Scanner")
+            }) {
+                Text("Scan QR")
+            }
         }
     }
 }
 
 fun formatHex(bytes: ByteArray?): String {
     if (bytes == null) return "nil"
-    return bytes.asSequence()
-        .map { "%02X".format(it) }
-        .chunked(16) { it.joinToString(" ") }
+    return bytes.asSequence().map { "%02X".format(it) }.chunked(16) { it.joinToString(" ") }
         .joinToString("\n")
 }
 
@@ -82,10 +76,12 @@ fun StatsBox(
     keyManager: KeyManager = koinInject(),
     quicClient: QuicClient = koinInject()
 ) {
+    val status by quicClient.status
+
     val keys = mapOf(
         "IDENTITY SECRET KEY" to keyManager.getSecretKey(),
         "IDENTITY PUBLIC KEY" to keyManager.getPublicKey(),
-        "SERVER PUBLIC KEY" to quicClient.handshake.serverPublicKey?.bytes
+        "SERVER PUBLIC KEY" to quicClient.handshake?.serverPublicKey?.bytes
     )
 
     Column(
@@ -98,6 +94,8 @@ fun StatsBox(
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(12.dp)
     ) {
+        Text("State : $status")
+
         for ((text, bytes) in keys) {
             Text(
                 text,
@@ -105,8 +103,7 @@ fun StatsBox(
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground.copy(0.6f),
                 modifier = Modifier.padding(
-                    bottom = 4.dp,
-                    top = if (text == keys.keys.first()) 0.dp else 8.dp
+                    bottom = 4.dp, top = if (text == keys.keys.first()) 0.dp else 8.dp
                 )
             )
             Text(
