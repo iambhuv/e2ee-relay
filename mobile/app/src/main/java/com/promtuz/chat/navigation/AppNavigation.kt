@@ -21,6 +21,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.screens.ChatScreen
+import com.promtuz.chat.ui.screens.HomeScreen
 import com.promtuz.chat.ui.screens.ShareIdentityScreen
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
@@ -61,7 +62,7 @@ fun AppNavigation(keyManager: KeyManager = koinInject()) {
             ),
             entryProvider = { key ->
                 when (key) {
-                    is AppRoutes.App -> NavEntry(key) { AppScreen() }
+                    is AppRoutes.App -> NavEntry(key) { HomeScreen() }
                     is AppRoutes.ProfileScreen -> NavEntry(key) { Text("Profile") }
                     is AppRoutes.ChatScreen -> NavEntry(key) { ChatScreen(key.userId) }
                     is AppRoutes.QrScreen -> NavEntry(key) { ShareIdentityScreen() }

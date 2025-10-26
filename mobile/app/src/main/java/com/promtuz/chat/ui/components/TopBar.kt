@@ -1,14 +1,9 @@
 package com.promtuz.chat.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,17 +11,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.*
+import androidx.compose.ui.text.style.*
+import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
+import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.data.remote.ConnectionStatus
 import com.promtuz.chat.data.remote.QuicClient
+import com.promtuz.chat.navigation.AppRoutes
 import com.promtuz.chat.ui.text.calSansfamily
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,7 +32,8 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(quicClient: QuicClient = koinInject()) {
-    val ctx = LocalContext.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
     val staticTitle = stringResource(R.string.app_name)
     var dynamicTitle by remember { mutableStateOf(staticTitle) }
     var job by remember { mutableStateOf<Job?>(null) }
@@ -46,10 +42,10 @@ fun TopBar(quicClient: QuicClient = koinInject()) {
         snapshotFlow { quicClient.status.value }.collect { newStatus ->
             dynamicTitle = when (newStatus) {
                 ConnectionStatus.Disconnected, ConnectionStatus.NetworkError -> staticTitle
-                ConnectionStatus.Connecting -> ctx.getString(R.string.app_status_connecting)
-                ConnectionStatus.HandshakeFailed -> ctx.getString(R.string.app_status_handshake_fail)
+                ConnectionStatus.Connecting -> context.getString(R.string.app_status_connecting)
+                ConnectionStatus.HandshakeFailed -> context.getString(R.string.app_status_handshake_fail)
                 ConnectionStatus.Connected -> {
-                    ctx.getString(R.string.app_status_connected).also {
+                    context.getString(R.string.app_status_connected).also {
                         job = launch {
                             delay(1200)
                             if (quicClient.status.value == ConnectionStatus.Connected) {
@@ -83,5 +79,16 @@ fun TopBar(quicClient: QuicClient = koinInject()) {
         },
         actions = {
             Avatar("B", 44.dp, RoundedCornerShape(16.dp))
+
+//            IconButton({
+//                navigator.push(AppRoutes.QrScreen)
+//            }) {
+//                Icon(
+//                    painter = painterResource(R.drawable.i_qr_code_scanner),
+//                    "QR Code",
+//                    Modifier,
+//                    MaterialTheme.colorScheme.onPrimaryContainer
+//                )
+//            }
         })
 }

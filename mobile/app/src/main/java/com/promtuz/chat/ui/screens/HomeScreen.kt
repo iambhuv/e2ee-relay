@@ -1,7 +1,5 @@
 package com.promtuz.chat.ui.screens
 
-import androidx.activity.compose.LocalActivity
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,64 +8,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
-import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import com.promtuz.chat.R
 import com.promtuz.chat.compositions.LocalNavigator
-import com.promtuz.chat.data.remote.ConnectionError
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.navigation.AppRoutes
 import com.promtuz.chat.security.KeyManager
+import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalStdlibApi::class)
 @Composable
-fun HomeScreen(
-    innerPadding: PaddingValues,
-    quicClient: QuicClient = koinInject(),
-    keyManager: KeyManager = koinInject()
-) {
+fun HomeScreen() {
     val navigator = LocalNavigator.current
 
-    quicClient.connect(LocalContext.current, object : QuicClient.Listener {
-        override fun onConnectionFailure(e: ConnectionError) {
-
+    Scaffold(
+        topBar = { TopBar() },
+        floatingActionButton = {
+            FloatingActionButton({
+                navigator.push(AppRoutes.QrScreen)
+            }) {
+                Icon(
+                    painter = painterResource(R.drawable.i_qr_code_scanner),
+                    "QR Code",
+                    Modifier,
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
-
-        override fun onConnectionSuccess() {
-
-        }
-    })
-
-    Box {
+    ) { innerPadding ->
         Column {
             StatsBox(innerPadding)
-
-//            keyManager.getPublicKey()?.let {
-//                QrCode(
-//                    it, Modifier
-//                        .fillMaxWidth(0.6f)
-//                        .aspectRatio(1f)
-//                        .align(Alignment.CenterHorizontally)
-//                )
-//            }
-
-//            val qrScanner = remember {
-//                QrScanner({ bytes ->
-//                    println("QR SCAN RESULT : ${bytes.toHexString()}")
-//                }, { e ->
-//
-//                })
-//            }
-
-            Button({
-                navigator.push(AppRoutes.QrScreen)
-                // qrScanner.show(activity.supportFragmentManager, "QR Scanner")
-            }) {
-                Text("Scan QR")
-            }
         }
     }
 }
@@ -77,7 +52,6 @@ fun formatHex(bytes: ByteArray?, c: Int = 16): String {
     return bytes.asSequence().map { "%02X".format(it) }.chunked(c) { it.joinToString(" ") }
         .joinToString("\n")
 }
-
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
