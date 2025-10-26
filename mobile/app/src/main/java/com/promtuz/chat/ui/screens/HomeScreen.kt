@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
@@ -17,18 +18,37 @@ import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.navigation.AppRoutes
 import com.promtuz.chat.security.KeyManager
+import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalStdlibApi::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(keyManager: KeyManager = koinInject()) {
     val navigator = LocalNavigator.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    Scaffold(
-        topBar = { TopBar() },
-        floatingActionButton = {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            BoxWithConstraints {
+                val maxWidth = maxWidth * 0.8f
+
+                ModalDrawerSheet(
+                    modifier = Modifier.widthIn(min = 200.dp, max = maxWidth)
+                ) {
+                    keyManager.getPublicKey()?.let {
+                        Text("Scan Me Please", modifier = Modifier.padding(16.dp))
+                        HorizontalDivider()
+                        QrCode(it, Modifier.padding(32.dp))
+                        HorizontalDivider()
+                    }
+                }
+            }
+        },
+    ) {
+        Scaffold(topBar = { TopBar() }, floatingActionButton = {
             FloatingActionButton({
                 navigator.push(AppRoutes.QrScreen)
             }) {
@@ -39,10 +59,10 @@ fun HomeScreen() {
                     MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-        }
-    ) { innerPadding ->
-        Column {
-            StatsBox(innerPadding)
+        }) { innerPadding ->
+            Column {
+                StatsBox(innerPadding)
+            }
         }
     }
 }

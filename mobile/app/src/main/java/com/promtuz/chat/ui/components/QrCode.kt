@@ -35,7 +35,9 @@ fun QrCode(
         }
     }
 
-    Box(modifier) {
+    Box(modifier
+        .fillMaxWidth()
+        .aspectRatio(1f)) {
         Image(bitmap = bmp.asImageBitmap(), "Identity Public QR Code", Modifier.fillMaxSize())
     }
 }
