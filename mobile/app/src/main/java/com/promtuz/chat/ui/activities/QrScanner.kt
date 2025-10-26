@@ -44,14 +44,15 @@ import com.promtuz.chat.R
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.ui.theme.PromtuzTheme
 
+
 class QrScanner(
     private val onSuccess: (value: ByteArray) -> Unit, private val onError: (e: Exception) -> Unit
 ) : BottomSheetDialogFragment() {
-    private val cameraPermissionState = mutableStateOf(PermissionState.NotRequested)
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var imageAnalysis: ImageAnalysis
     private lateinit var barcodeScanner: BarcodeScanner
 
+    private val cameraPermissionState = mutableStateOf(PermissionState.NotRequested)
     private val cameraProviderState = mutableStateOf<ProcessCameraProvider?>(null)
 
     private var requestPermissionLauncher: ActivityResultLauncher<String> =

@@ -153,4 +153,5 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
 
     implementation(libs.barcode.scanning)
+    implementation(libs.zxing.core)
 }

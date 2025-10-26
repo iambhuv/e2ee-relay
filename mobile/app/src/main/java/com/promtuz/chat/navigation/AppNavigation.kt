@@ -1,8 +1,5 @@
 package com.promtuz.chat.navigation
 
-// import androidx.navigation3.runtime.remember
-// import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-// import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -11,50 +8,39 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.promtuz.chat.compositions.LocalBackStack
+import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.screens.ChatScreen
-import com.promtuz.chat.ui.screens.EncryptionKeyScreen
+import com.promtuz.chat.ui.screens.ShareIdentityScreen
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 
-@Serializable
-sealed interface AppNavKey : NavKey
 
-object AppRoutes {
+object AppRoutes : NavKey {
     @Serializable
-    data object App : AppNavKey
+    data object App : NavKey
 
     @Serializable
-    data class ChatScreen(val userId: String) : AppNavKey
+    data class ChatScreen(val userId: String) : NavKey
 
     @Serializable
-    data class ProfileScreen(val userId: String) : AppNavKey
+    data class ProfileScreen(val userId: String) : NavKey
 
     @Serializable
-    data object SettingScreen : AppNavKey
-
-
-    // === AUTHENTICATION SCREENS START ===
+    data object SettingScreen : NavKey
 
     @Serializable
-    data object WelcomeScreen : AppNavKey
-
-    @Serializable
-    data object EncryptionKeyScreen : AppNavKey
-
-    // === AUTHENTICATION SCREENS END ===
+    data object QrScreen : NavKey
 }
 
 
@@ -63,41 +49,27 @@ fun AppNavigation(keyManager: KeyManager = koinInject()) {
     val backStack = rememberNavBackStack(
         AppRoutes.App
     )
+    val navigator = Navigator(backStack)
 
-    CompositionLocalProvider(LocalBackStack provides backStack) {
+    CompositionLocalProvider(LocalNavigator provides navigator) {
         NavDisplay(
             backStack,
             Modifier.background(MaterialTheme.colorScheme.background),
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
-//                    rememberSavedStateNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
-//                    rememberSceneSetupNavEntryDecorator()
             ),
             entryProvider = { key ->
                 when (key) {
-                    is AppRoutes.App -> {
-                        NavEntry(key, content = { HomeNavigation() })
-                    }
-
-                    is AppRoutes.ProfileScreen -> {
-                        NavEntry(key, content = { Text("Sup Homie") })
-                    }
-
-                    is AppRoutes.ChatScreen -> {
-                        NavEntry(key, content = { ChatScreen(key.userId) })
-                    }
-
-                    is AppRoutes.EncryptionKeyScreen -> {
-                        NavEntry(key, content = { EncryptionKeyScreen() })
-                    }
+                    is AppRoutes.App -> NavEntry(key) { AppScreen() }
+                    is AppRoutes.ProfileScreen -> NavEntry(key) { Text("Profile") }
+                    is AppRoutes.ChatScreen -> NavEntry(key) { ChatScreen(key.userId) }
+                    is AppRoutes.QrScreen -> NavEntry(key) { ShareIdentityScreen() }
 
                     else -> throw RuntimeException("Invalid Screen")
                 }
             },
             transitionSpec = {
-                // Forward: new screen slides in from 30% while fading in
-                // Previous screen fades out subtly and stays in place2
                 (slideInHorizontally(
                     initialOffsetX = { (it * 0.3f).toInt() },
                     animationSpec = tween(250, easing = FastOutSlowInEasing)

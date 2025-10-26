@@ -2,6 +2,7 @@
 agp = "8.12.3"
 barcodeScanning = "17.3.0"
 constraintlayoutCompose = "1.1.1"
+core = "3.5.3"
 coreSplashscreen = "1.0.1"
 hazeMaterials = "1.6.10"
 kotlin = "2.2.20"
@@ -44,6 +45,7 @@ androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constr
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "core" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "hazeMaterials" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

@@ -23,12 +23,10 @@ This doesn't do much as invasing the privacy of users
 2. These posts are then queued in for eg. RabbitMQ, ready to be consumed by the receiver.
 
 Consumed?
-Yes, the user when connecting to the relay server, 
+Yes, the user when connecting to the relay server,
 will be sent all the pending messages available to them.
 
 ---
-
-
 
 ## Registering a Public Key
 
@@ -37,19 +35,16 @@ will be sent all the pending messages available to them.
 yes, and hcaptcha to prevent abuse.
 /register with public key normally BUT server will respond with a challenge ofc to prove your ownership of the key
 
-
-
-
 ## NATS
 
-*After succesful handshake*
-All messages sent to subject 
+_After succesful handshake_
+All messages sent to subject
 PublishMessage {
-  Subject -> DM:{USER_PUBLIC_KEY_HEX}
-  Payload -> Payload(
-    MessageCreate {
-      id: {UUID},
-      
+Subject -> DM:{USER_PUBLIC_KEY_HEX}
+Payload -> Payload(
+MessageCreate {
+id: {UUID},
+
       from: {SENDER_PUBLIC_KEY_BYTES},
       cipher: {ENCRYPTED_BYTES},
       nonce: {NONCE_BYTES},
@@ -60,5 +55,19 @@ PublishMessage {
     }
 
     // Others
-  )
+
+)
 }
+
+## AGREEMENTS??
+
+UserA = me
+UserB = to-be friend
+
+UserB can simply share the QR containing UserB's PublicKey
+
+UserA can scan and create a User entity in local database marking UserB as one sided friend
+UserA can now send messages to UserB using that User entity, however
+instead of receiving message directly, UserB will be shown a request (is completely frontend based feature), of course UserB can allow unknown from privacy settings
+
+: what if users can have a reputation ?

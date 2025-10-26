@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.compositions.LocalBackStack
+import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.di.authModule
 import com.promtuz.chat.presentation.state.WelcomeField
 import com.promtuz.chat.presentation.state.WelcomeStatus
@@ -64,7 +64,7 @@ fun WelcomeScreen(
 
     val focusManager = LocalFocusManager.current
 
-    val backStack = LocalBackStack.current
+    val backStack = LocalNavigator.current
 
     Box(
         modifier

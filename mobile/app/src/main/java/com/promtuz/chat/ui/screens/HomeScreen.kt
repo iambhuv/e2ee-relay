@@ -8,28 +8,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.data.remote.ConnectionError
 import com.promtuz.chat.data.remote.QuicClient
+import com.promtuz.chat.navigation.AppRoutes
 import com.promtuz.chat.security.KeyManager
-import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.theme.PromtuzTheme
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalStdlibApi::class)
 @Composable
 fun HomeScreen(
-    hazeState: HazeState, innerPadding: PaddingValues, quicClient: QuicClient = koinInject()
+    innerPadding: PaddingValues,
+    quicClient: QuicClient = koinInject(),
+    keyManager: KeyManager = koinInject()
 ) {
-    val activity = LocalActivity.current as AppCompatActivity
+    val navigator = LocalNavigator.current
 
     quicClient.connect(LocalContext.current, object : QuicClient.Listener {
         override fun onConnectionFailure(e: ConnectionError) {
@@ -42,19 +42,29 @@ fun HomeScreen(
     })
 
     Box {
-        Column(Modifier.hazeSource(hazeState)) {
+        Column {
             StatsBox(innerPadding)
 
-            val qrScanner = remember {
-                QrScanner({ bytes ->
+//            keyManager.getPublicKey()?.let {
+//                QrCode(
+//                    it, Modifier
+//                        .fillMaxWidth(0.6f)
+//                        .aspectRatio(1f)
+//                        .align(Alignment.CenterHorizontally)
+//                )
+//            }
 
-                }, { e ->
-
-                })
-            }
+//            val qrScanner = remember {
+//                QrScanner({ bytes ->
+//                    println("QR SCAN RESULT : ${bytes.toHexString()}")
+//                }, { e ->
+//
+//                })
+//            }
 
             Button({
-                qrScanner.show(activity.supportFragmentManager, "QR Scanner")
+                navigator.push(AppRoutes.QrScreen)
+                // qrScanner.show(activity.supportFragmentManager, "QR Scanner")
             }) {
                 Text("Scan QR")
             }
@@ -62,9 +72,9 @@ fun HomeScreen(
     }
 }
 
-fun formatHex(bytes: ByteArray?): String {
+fun formatHex(bytes: ByteArray?, c: Int = 16): String {
     if (bytes == null) return "nil"
-    return bytes.asSequence().map { "%02X".format(it) }.chunked(16) { it.joinToString(" ") }
+    return bytes.asSequence().map { "%02X".format(it) }.chunked(c) { it.joinToString(" ") }
         .joinToString("\n")
 }
 
