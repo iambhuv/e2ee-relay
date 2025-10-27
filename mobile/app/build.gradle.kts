@@ -60,7 +60,13 @@ android {
     }
 
     kotlin {
-        compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+
+            freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3Api")
+            freeCompilerArgs.add("-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
+            freeCompilerArgs.add("-opt-in=androidx.camera.core.ExperimentalGetImage")
+        }
     }
     buildFeatures {
         compose = true

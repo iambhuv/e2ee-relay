@@ -2,9 +2,8 @@ package com.promtuz.chat.navigation
 
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import kotlinx.coroutines.flow.MutableStateFlow
 
-class AppNavigator(val backStack: NavBackStack<NavKey>) {
+class AppNavigator(val backStack: MutableList<NavKey>) {
     fun push(key: NavKey) {
         if (backStack.size > 1 && backStack[backStack.size - 2] == key) {
             backStack.removeLastOrNull()

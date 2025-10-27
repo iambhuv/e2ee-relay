@@ -1,4 +1,4 @@
-package com.promtuz.chat
+package com.promtuz.chat.ui.activities
 
 import android.app.ActivityManager
 import android.os.Bundle
@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.theme.PromtuzTheme
 
-
 class ManageSpace : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,12 +29,12 @@ class ManageSpace : ComponentActivity() {
         setContent {
 
             PromtuzTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier.Companion.fillMaxSize()) { innerPadding ->
                     Box(
-                        Modifier
+                        Modifier.Companion
                             .fillMaxSize()
                             .padding(innerPadding),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Companion.Center
                     ) {
                         Column {
                             Text("Manage Space? No!")

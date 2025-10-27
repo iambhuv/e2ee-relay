@@ -8,6 +8,7 @@ import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
+import com.promtuz.chat.ui.text.avgSizeInStyle
 import org.koin.compose.viewmodel.koinViewModel
 
 
@@ -17,9 +18,11 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BackTopBar(
+    title: String,
     appViewModel: AppViewModel = koinViewModel(),
-    title: @Composable () -> Unit,
 ) {
+    val textTheme = MaterialTheme.typography
+
     TopAppBar(navigationIcon = {
         IconButton({
             appViewModel.navigator.back()
@@ -31,5 +34,11 @@ fun BackTopBar(
                 MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-    }, title = title)
+    }, title = {
+        Text(
+            title, style = avgSizeInStyle(
+                textTheme.titleLargeEmphasized, textTheme.titleMediumEmphasized
+            )
+        )
+    })
 }

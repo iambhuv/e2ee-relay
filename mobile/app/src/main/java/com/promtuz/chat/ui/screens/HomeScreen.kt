@@ -1,5 +1,6 @@
 package com.promtuz.chat.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,27 +9,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
 import com.promtuz.chat.data.remote.QuicClient
-import com.promtuz.chat.navigation.Route
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.security.KeyManager
+import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 fun HomeScreen(
     keyManager: KeyManager = koinInject(),
-    appViewModel: AppViewModel = koinInject()
+    appViewModel: AppViewModel = koinViewModel()
 ) {
-    // val navigator = LocalAppNavigator.current
+    val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     ModalNavigationDrawer(
@@ -52,7 +54,7 @@ fun HomeScreen(
     ) {
         Scaffold(topBar = { TopBar() }, floatingActionButton = {
             FloatingActionButton({
-                appViewModel.backStack.add(Route.ShareIdentityScreen)
+                context.startActivity(Intent(context, ShareIdentity::class.java))
             }) {
                 Icon(
                     painter = painterResource(R.drawable.i_qr_code_scanner),
@@ -75,7 +77,6 @@ fun formatHex(bytes: ByteArray?, c: Int = 16): String {
         .joinToString("\n")
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun StatsBox(
     innerPadding: PaddingValues,

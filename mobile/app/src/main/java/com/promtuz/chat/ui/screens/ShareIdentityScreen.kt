@@ -1,11 +1,12 @@
+@file:androidx.annotation.OptIn(ExperimentalGetImage::class) @file:OptIn(
+    ExperimentalMaterial3ExpressiveApi::class
+)
+
 package com.promtuz.chat.ui.screens
 
 import android.content.ClipData
-import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -31,43 +32,17 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ShareIdentityScreen(
     keyManager: KeyManager = koinInject()
 ) {
-    val context = LocalContext.current
-    val clipboard = LocalClipboard.current
-    // val activity = LocalActivity.current as AppCompatActivity
     val theme = MaterialTheme
-    val scope = rememberCoroutineScope()
-
-    val qrLauncher = rememberLauncherForActivityResult(
-        contract = object : ActivityResultContract<Unit, ByteArray?>() {
-            override fun createIntent(context: Context, input: Unit) =
-                Intent(context, QrScanner::class.java)
-
-            override fun parseResult(resultCode: Int, intent: Intent?) =
-                intent?.getByteArrayExtra("qr_result")
-        }
-    ) { bytes ->
-        println("QR SCAN RESULT: ${bytes?.toHexString()}")
-    }
 
     val bytes = remember { keyManager.getPublicKey() }
         ?: throw Exception("Identity Public Key Unavailable in Share Screen")
 
     Scaffold(
-        topBar = {
-            BackTopBar {
-                Text(
-                    "Share Identity Key", style = avgSizeInStyle(
-                        theme.typography.titleLargeEmphasized,
-                        theme.typography.titleMediumEmphasized
-                    )
-                )
-            }
-        }) { innerPadding ->
+        topBar = { TopBar() }) { innerPadding ->
         Column(
             Modifier
                 .fillMaxSize()
@@ -82,93 +57,110 @@ fun ShareIdentityScreen(
                     .align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(32.dp))
                     .background(theme.colorScheme.surfaceContainer)
-                    .padding(32.dp),
-                verticalArrangement = Arrangement.spacedBy(28.dp)
+                    .padding(32.dp), verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
                 QrCode(
-                    bytes, Modifier
+                    bytes,
+                    Modifier
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally)
                         .aspectRatio(1f)
                 )
 
-                Text(
-                    bytes.toHexString(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .combinedClickable(
-                            onClick = {
-                                scope.launch {
-                                    clipboard.setClipEntry(
-                                        ClipEntry(
-                                            ClipData.newPlainText(
-                                                "Public Identity Key",
-                                                bytes.toHexString()
-                                            )
-                                        )
-                                    )
-
-                                    Toast.makeText(
-                                        context,
-                                        "Public Identity Key copied to clipboard",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        ),
-                    textAlign = TextAlign.Center,
-                    style = theme.typography.bodyLargeEmphasized,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                PublicKeyBytesHex(bytes)
             }
-
 
             Column(
                 Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
-                    {},
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .align(Alignment.CenterHorizontally),
-
-                    ) {
-                    Text(
-                        "Share QR Code",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelLargeEmphasized.copy(fontSize = MaterialTheme.typography.labelLargeEmphasized.fontSize),
-                    )
-                }
-
-                TextButton(
-                    {
-                        qrLauncher.launch(Unit)
-                        // qrScanner.show(activity.supportFragmentManager, "QR Code Scanner")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .align(Alignment.CenterHorizontally),
-
-                    ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.i_qr_code_scanner),
-                            "QR Code Scanner Icon"
-                        )
-
-                        Text(
-                            "Scan QR Code",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.labelLargeEmphasized.copy(fontSize = MaterialTheme.typography.labelLargeEmphasized.fontSize),
-                        )
-                    }
-                }
+                ShareQRButton()
+                ScanQRButton()
             }
+        }
+    }
+}
+
+
+@Composable
+private fun TopBar(modifier: Modifier = Modifier) {
+    val textTheme = MaterialTheme.typography
+
+    BackTopBar("Share Identity Key")
+}
+
+
+@Composable
+private fun PublicKeyBytesHex(bytes: ByteArray, modifier: Modifier = Modifier) {
+    val textTheme = MaterialTheme.typography
+    val context = LocalContext.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+
+    Text(
+        bytes.toHexString(),
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(onClick = {
+                scope.launch {
+                    val clipData = ClipData.newPlainText("Public Identity Key", bytes.toHexString())
+                    val clipEntry = ClipEntry(clipData)
+                    clipboard.setClipEntry(clipEntry)
+
+                    Toast.makeText(
+                        context, "Public Identity Key copied to clipboard", Toast.LENGTH_LONG
+                    ).show()
+                }
+            }),
+        textAlign = TextAlign.Center,
+        style = textTheme.bodyLargeEmphasized,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+}
+
+@Composable
+private fun ColumnScope.ShareQRButton(modifier: Modifier = Modifier) {
+    Button(
+        {},
+        modifier = modifier
+            .fillMaxWidth(0.8f)
+            .align(Alignment.CenterHorizontally),
+    ) {
+        Text(
+            "Share QR Code",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.labelLargeEmphasized.copy(fontSize = MaterialTheme.typography.labelLargeEmphasized.fontSize),
+        )
+    }
+}
+
+
+@Composable
+private fun ColumnScope.ScanQRButton(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    TextButton(
+        {
+            context.startActivity(Intent(context, QrScanner::class.java))
+        },
+        modifier = modifier
+            .fillMaxWidth(0.8f)
+            .align(Alignment.CenterHorizontally),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.i_qr_code_scanner), "QR Code Scanner Icon"
+            )
+
+            Text(
+                "Scan QR Code",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelLargeEmphasized.copy(fontSize = MaterialTheme.typography.labelLargeEmphasized.fontSize),
+            )
         }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
@@ -54,6 +55,7 @@ fun AppNavigation(
 ) {
     val activity = LocalActivity.current
     val navigator = appViewModel.navigator
+    val backStack = appViewModel.backStack
 
     BackHandler(true) {
         if (!navigator.back()) {
@@ -62,12 +64,11 @@ fun AppNavigation(
     }
 
     NavDisplay(
-        appViewModel.backStack,
+        backStack,
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background),
         entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
+            rememberSaveableStateHolderNavEntryDecorator()
         ),
         entryProvider = entryProvider {
             entry<Route.App> { HomeScreen() }
