@@ -29,12 +29,12 @@ class ManageSpace : ComponentActivity() {
         setContent {
 
             PromtuzTheme {
-                Scaffold(modifier = Modifier.Companion.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(
-                        Modifier.Companion
+                        Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        contentAlignment = Alignment.Companion.Center
+                        contentAlignment = Alignment.Center
                     ) {
                         Column {
                             Text("Manage Space? No!")
