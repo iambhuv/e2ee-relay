@@ -1,16 +1,18 @@
 package com.promtuz.chat.ui.screens
 
 import android.content.ClipData
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
-import androidx.activity.compose.LocalActivity
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
@@ -18,42 +20,46 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.style.*
-import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import androidx.navigation3.runtime.rememberNavBackStack
 import com.promtuz.chat.R
-import com.promtuz.chat.compositions.LocalNavigator
-import com.promtuz.chat.navigation.AppRoutes
-import com.promtuz.chat.navigation.Navigator
+import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.components.BackTopBar
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.text.avgSizeInStyle
-import com.promtuz.chat.ui.theme.PromtuzTheme
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ShareIdentityScreen() {
+fun ShareIdentityScreen(
+    keyManager: KeyManager = koinInject()
+) {
     val context = LocalContext.current
     val clipboard = LocalClipboard.current
-    val activity = LocalActivity.current as AppCompatActivity
+    // val activity = LocalActivity.current as AppCompatActivity
     val theme = MaterialTheme
     val scope = rememberCoroutineScope()
 
-    val qrScanner = remember {
-        QrScanner({ bytes ->
-            println("QR SCAN RESULT : ${bytes.toHexString()}")
-        }, { e ->
+    val qrLauncher = rememberLauncherForActivityResult(
+        contract = object : ActivityResultContract<Unit, ByteArray?>() {
+            override fun createIntent(context: Context, input: Unit) =
+                Intent(context, QrScanner::class.java)
 
-        })
+            override fun parseResult(resultCode: Int, intent: Intent?) =
+                intent?.getByteArrayExtra("qr_result")
+        }
+    ) { bytes ->
+        println("QR SCAN RESULT: ${bytes?.toHexString()}")
     }
 
+    val bytes = remember { keyManager.getPublicKey() }
+        ?: throw Exception("Identity Public Key Unavailable in Share Screen")
 
     Scaffold(
         topBar = {
             BackTopBar {
-//                Text("Share Identity Key", style = MaterialTheme.typography.titleMediumEmphasized)
                 Text(
                     "Share Identity Key", style = avgSizeInStyle(
                         theme.typography.titleLargeEmphasized,
@@ -69,6 +75,7 @@ fun ShareIdentityScreen() {
                 .background(theme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(48.dp, Alignment.CenterVertically)
         ) {
+
             Column(
                 Modifier
                     .fillMaxWidth(0.8f)
@@ -78,48 +85,6 @@ fun ShareIdentityScreen() {
                     .padding(32.dp),
                 verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
-                val bytes = byteArrayOf(
-                    12,
-                    3,
-                    2,
-                    31,
-
-                    123,
-                    123,
-                    123,
-                    12,
-
-                    3,
-                    3,
-                    123,
-                    23,
-
-                    3,
-                    2,
-                    31,
-                    123,
-
-                    123,
-                    123,
-                    12,
-                    3,
-
-                    3,
-                    123,
-                    23,
-                    3,
-
-                    31,
-                    123,
-                    123,
-                    12,
-
-                    3,
-                    3,
-                    123,
-                    23,
-                )
-
                 QrCode(
                     bytes, Modifier
                         .fillMaxWidth()
@@ -179,7 +144,8 @@ fun ShareIdentityScreen() {
 
                 TextButton(
                     {
-                        qrScanner.show(activity.supportFragmentManager, "QR Code Scanner")
+                        qrLauncher.launch(Unit)
+                        // qrScanner.show(activity.supportFragmentManager, "QR Code Scanner")
                     },
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
@@ -203,22 +169,6 @@ fun ShareIdentityScreen() {
                     }
                 }
             }
-        }
-    }
-}
-
-
-@Preview
-@Composable
-fun QrScreenPreview() {
-    PromtuzTheme(darkTheme = true) {
-        val backStack = rememberNavBackStack(
-            AppRoutes.App
-        )
-        val navigator = Navigator(backStack)
-
-        CompositionLocalProvider(LocalNavigator provides navigator) {
-            ShareIdentityScreen()
         }
     }
 }

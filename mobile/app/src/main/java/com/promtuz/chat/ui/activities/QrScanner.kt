@@ -1,21 +1,25 @@
 package com.promtuz.chat.ui.activities
 
 import android.Manifest
-import android.app.Dialog
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,28 +30,22 @@ import androidx.compose.ui.*
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
-import com.promtuz.chat.R
 import com.promtuz.chat.presentation.state.PermissionState
+import com.promtuz.chat.ui.components.BackTopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
 
 
-class QrScanner(
-    private val onSuccess: (value: ByteArray) -> Unit, private val onError: (e: Exception) -> Unit
-) : BottomSheetDialogFragment() {
+@ExperimentalGetImage
+class QrScanner : AppCompatActivity() {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var imageAnalysis: ImageAnalysis
     private lateinit var barcodeScanner: BarcodeScanner
@@ -66,121 +64,61 @@ class QrScanner(
             }
         }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme).apply {
-            setOnShowListener {
-                val bottomSheet =
-                    findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-                bottomSheet?.let {
-                    val behavior = BottomSheetBehavior.from(it)
-                    behavior.isFitToContents = false // Important for full screen
-                    behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                }
-
-            }
-
-            cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-
-            imageAnalysis = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-
-            window?.setDimAmount(0f)
-        }
-    }
-
     override fun onStart() {
         super.onStart()
-        dialog?.window?.let {
-            it.setLayout(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            WindowCompat.enableEdgeToEdge(it)
-            WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars = false
 
-            WindowCompat.setDecorFitsSystemWindows(it, false)
-        }
+        window.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        WindowCompat.enableEdgeToEdge(window)
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars =
+            false
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
     }
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View = ComposeView(requireContext()).apply {
-        setPadding(0, 0, 0, 0)
-        fitsSystemWindows = true
+    override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
+        cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+
+        imageAnalysis =
+            ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+
+        return super.onCreateView(name, context, attrs)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        enableEdgeToEdge()
 
         setContent {
             PromtuzTheme {
-                ConstraintLayout(
-                    Modifier
-                        .fillMaxSize()
-                        .background(Color.Red)
-                ) {
-                    val (closeIcon, wrapper) = createRefs()
-
+                Scaffold(
+                    Modifier.fillMaxSize(),
+                    topBar = {
+                        BackTopBar { Text("Scan QR") }
+                    }
+                ) { _ ->
                     val cameraPermission by cameraPermissionState
                     val cameraProvider by cameraProviderState
 
-                    cameraProvider?.let {
-                        CameraPreview(it, Modifier.fillMaxSize())
-                    }
-
-                    Box(Modifier.constrainAs(wrapper) {
-                        centerTo(parent)
-                    }) {
-                        if (cameraPermission != PermissionState.Granted) {
-                            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-                        } else {
-                            ScannerUI()
+                    Box(Modifier.fillMaxSize()) {
+                        cameraProvider?.let {
+                            CameraPreview(it, Modifier.fillMaxSize())
                         }
-                    }
 
-                    IconButton({
-                        dismiss()
-                    }, modifier = Modifier.constrainAs(closeIcon) {
-                        top.linkTo(parent.top, margin = 16.dp)
-                        absoluteRight.linkTo(parent.absoluteRight, margin = 16.dp)
-                    }) {
-                        Icon(
-                            painter = painterResource(R.drawable.i_close),
-                            "Close",
-                            Modifier.size(28.dp),
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            if (cameraPermission != PermissionState.Granted) {
+                                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            } else {
+                                ScannerUI()
+                            }
+                        }
                     }
                 }
             }
         }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        (dialog as? BottomSheetDialog)?.let { bottomSheetDialog ->
-            bottomSheetDialog.behavior.apply {
-                state = BottomSheetBehavior.STATE_EXPANDED
-                skipCollapsed = true
-                peekHeight = resources.displayMetrics.heightPixels
-            }
-
-            // Remove all padding and background from the bottom sheet container
-            val bottomSheet = bottomSheetDialog.findViewById<View>(
-                com.google.android.material.R.id.design_bottom_sheet
-            )
-            bottomSheet?.apply {
-                setPadding(0, 0, 0, 0)
-            }
-
-            // Remove padding from the coordinator layout parent
-            val coordinator = bottomSheet?.parent as? View
-            coordinator?.apply {
-                setPadding(0, 0, 0, 0)
-                fitsSystemWindows = false
-            }
-        }
-
-        // Remove padding from the view itself
-        view.setPadding(0, 0, 0, 0)
-        (view.parent as? View)?.setPadding(0, 0, 0, 0)
     }
 
     private val analyzer = ImageAnalysis.Analyzer { imageProxy ->
@@ -192,13 +130,14 @@ class QrScanner(
                 qr ?: return@addOnSuccessListener
 
                 qr.rawBytes?.let {
-                    onSuccess(it)
-                    dismiss()
+                    // onSuccess(it)
+                    setResult(RESULT_OK, Intent().putExtra("qr_result", it))
+                    finish()
                 }
             }
         }.addOnFailureListener { exception ->
             Log.d("QrScanner", "Scan Fail: ", exception)
-            onError(exception)
+            setResult(RESULT_CANCELED, Intent().putExtra("exception", exception))
         }.addOnCompleteListener {
             imageProxy.close()
         }

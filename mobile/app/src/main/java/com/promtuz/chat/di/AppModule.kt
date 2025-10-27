@@ -1,6 +1,8 @@
 package com.promtuz.chat.di
 
 import com.promtuz.chat.data.remote.QuicClient
+import com.promtuz.chat.navigation.AppNavigator
+import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.presentation.viewmodel.WelcomeViewModel
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.rust.Core
@@ -17,7 +19,10 @@ val appModule = module {
 
     single { QuicClient(get(), get()) }
 
+    // single { AppNavigator(get()) }
+
     viewModel { WelcomeViewModel(get(), get(), get()) }
+    viewModel { AppViewModel(get()) }
 }
 
 val authModule = module {

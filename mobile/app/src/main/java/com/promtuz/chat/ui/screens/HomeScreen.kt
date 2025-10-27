@@ -7,16 +7,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.data.remote.QuicClient
-import com.promtuz.chat.navigation.AppRoutes
+import com.promtuz.chat.navigation.Route
+import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
@@ -25,8 +24,11 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalStdlibApi::class)
 @Composable
-fun HomeScreen(keyManager: KeyManager = koinInject()) {
-    val navigator = LocalNavigator.current
+fun HomeScreen(
+    keyManager: KeyManager = koinInject(),
+    appViewModel: AppViewModel = koinInject()
+) {
+    // val navigator = LocalAppNavigator.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     ModalNavigationDrawer(
@@ -50,7 +52,7 @@ fun HomeScreen(keyManager: KeyManager = koinInject()) {
     ) {
         Scaffold(topBar = { TopBar() }, floatingActionButton = {
             FloatingActionButton({
-                navigator.push(AppRoutes.QrScreen)
+                appViewModel.backStack.add(Route.ShareIdentityScreen)
             }) {
                 Icon(
                     painter = painterResource(R.drawable.i_qr_code_scanner),

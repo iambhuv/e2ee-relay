@@ -15,7 +15,7 @@ kotlinxSerializationCBOR = "1.9.0"
 ktorClient = "3.3.1"
 kwik = "0.10.6"
 lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.11.0"
+activityCompose = "1.12.0-beta01"
 composeBom = "2025.10.01"
 
 material = "1.13.0"
@@ -28,10 +28,12 @@ kotlinxSerializationCore = "1.9.0"
 kotlinSerialization = "2.2.20"
 room = "2.8.3"
 
+material3AdaptiveNav3 = "1.3.0-alpha02"
+
+
 cameraCore = "1.6.0-alpha01"
 
 koin-bom = "4.1.1"
-cameraLifecycle = "1.5.1"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
@@ -81,11 +83,12 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
 
+androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "material3AdaptiveNav3" }
+
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-androidx-compose-navigation = { module = "io.insert-koin:koin-androidx-compose-navigation" }
-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraLifecycle" }
 
 
 [plugins]

@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.di.authModule
 import com.promtuz.chat.presentation.state.WelcomeField
 import com.promtuz.chat.presentation.state.WelcomeStatus
@@ -53,8 +52,7 @@ import org.koin.compose.KoinApplicationPreview
 
 @Composable
 fun WelcomeScreen(
-    modifier: Modifier = Modifier,
-    vm: WelcomeViewModel = koinViewModel()
+    modifier: Modifier = Modifier, vm: WelcomeViewModel = koinViewModel()
 ) {
 
     val context = LocalContext.current
@@ -63,8 +61,6 @@ fun WelcomeScreen(
     val isTryingToContinue by remember { derivedStateOf { state.status != WelcomeStatus.Normal } }
 
     val focusManager = LocalFocusManager.current
-
-    val backStack = LocalNavigator.current
 
     Box(
         modifier
@@ -133,9 +129,7 @@ fun WelcomeScreen(
                 }) { text ->
 
                 Text(
-                    text ?: "",
-                    fontSize = 14.sp,
-                    color = outlinedFormElementsColors().error.label
+                    text ?: "", fontSize = 14.sp, color = outlinedFormElementsColors().error.label
                 )
 
             }
@@ -155,8 +149,7 @@ fun WelcomeScreen(
                         .fillMaxWidth()
                         .clip(RectangleShape),
                     contentAlignment = Alignment.Center,
-                    transitionSpec = { Buttonimations.labelSlide() }
-                ) { status ->
+                    transitionSpec = { Buttonimations.labelSlide() }) { status ->
                     Text(
                         stringResource(status.text),
                         textAlign = TextAlign.Center,
@@ -164,8 +157,7 @@ fun WelcomeScreen(
                         fontSize = 16.sp,
                         modifier = Modifier.graphicsLayer { // Allow overflow
                             clip = false
-                        }
-                    )
+                        })
                 }
             }
 
@@ -182,16 +174,10 @@ fun WelcomeScreen(
             TextButton(
                 {
                     Toast.makeText(
-                        context,
-                        "Importing is not supported yet.",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                },
-                Modifier.fillMaxWidth(),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = outlinedFormElementsColors().unfocused.border
+                        context, "Importing is not supported yet.", Toast.LENGTH_SHORT
+                    ).show()
+                }, Modifier.fillMaxWidth(), border = BorderStroke(
+                    width = 1.dp, color = outlinedFormElementsColors().unfocused.border
                 )
             ) {
                 Text(

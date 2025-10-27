@@ -18,10 +18,8 @@ import androidx.compose.ui.res.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.compositions.LocalNavigator
 import com.promtuz.chat.data.remote.ConnectionStatus
 import com.promtuz.chat.data.remote.QuicClient
-import com.promtuz.chat.navigation.AppRoutes
 import com.promtuz.chat.ui.text.calSansfamily
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -33,7 +31,6 @@ import org.koin.compose.koinInject
 @Composable
 fun TopBar(quicClient: QuicClient = koinInject()) {
     val context = LocalContext.current
-    val navigator = LocalNavigator.current
     val staticTitle = stringResource(R.string.app_name)
     var dynamicTitle by remember { mutableStateOf(staticTitle) }
     var job by remember { mutableStateOf<Job?>(null) }
