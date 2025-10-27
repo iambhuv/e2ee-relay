@@ -31,30 +31,25 @@ import com.promtuz.chat.ui.components.BackTopBar
 
 @Composable
 fun QrScannerScreen(activity: QrScanner) {
-    Scaffold(
-        Modifier.fillMaxSize(), topBar = {
-            BackTopBar("Scan QR")
-        }) { paddingValues ->
+    Box(
+        Modifier.fillMaxSize()
+    ) {
         val cameraPermission by activity.cameraPermissionState
         val cameraProvider by activity.cameraProviderState
 
-        Box(
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            cameraProvider?.let {
-                CameraPreview(it, activity.imageAnalysis, Modifier.fillMaxWidth())
-            }
+        cameraProvider?.let {
+            CameraPreview(it, activity.imageAnalysis, Modifier.fillMaxWidth())
+        }
 
-            Box(contentAlignment = Alignment.Center) {
-                if (cameraPermission != PermissionState.Granted) {
-                    activity.requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-                } else {
-                    ScannerUI(activity)
-                }
+        Box(contentAlignment = Alignment.Center) {
+            if (cameraPermission != PermissionState.Granted) {
+                activity.requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            } else {
+                ScannerUI(activity)
             }
         }
+
+        BackTopBar("Scan QR")
     }
 }
 

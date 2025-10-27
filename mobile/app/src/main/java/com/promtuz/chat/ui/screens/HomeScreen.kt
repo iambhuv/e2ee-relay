@@ -18,6 +18,7 @@ import com.promtuz.chat.R
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.security.KeyManager
+import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
@@ -25,10 +26,10 @@ import com.promtuz.chat.ui.theme.PromtuzTheme
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun HomeScreen(
-    keyManager: KeyManager = koinInject(),
-    appViewModel: AppViewModel = koinViewModel()
+    keyManager: KeyManager = koinInject(), appViewModel: AppViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

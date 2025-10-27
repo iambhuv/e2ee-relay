@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
@@ -23,22 +24,24 @@ fun BackTopBar(
 ) {
     val textTheme = MaterialTheme.typography
 
-    TopAppBar(navigationIcon = {
-        IconButton({
-            appViewModel.navigator.back()
-        }) {
-            Icon(
-                painter = painterResource(R.drawable.i_back),
-                "Go Back",
-                Modifier.size(28.dp),
-                MaterialTheme.colorScheme.onPrimaryContainer
+    TopAppBar(
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+        navigationIcon = {
+            IconButton({
+                appViewModel.navigator.back()
+            }) {
+                Icon(
+                    painter = painterResource(R.drawable.i_back),
+                    "Go Back",
+                    Modifier.size(28.dp),
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }, title = {
+            Text(
+                title, style = avgSizeInStyle(
+                    textTheme.titleLargeEmphasized, textTheme.titleMediumEmphasized
+                )
             )
-        }
-    }, title = {
-        Text(
-            title, style = avgSizeInStyle(
-                textTheme.titleLargeEmphasized, textTheme.titleMediumEmphasized
-            )
-        )
-    })
+        })
 }
