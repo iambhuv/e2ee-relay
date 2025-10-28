@@ -5,10 +5,13 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.window.OnBackInvokedDispatcher
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.os.BuildCompat
 import com.promtuz.chat.navigation.AppNavigation
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
@@ -31,7 +34,16 @@ class App : AppCompatActivity() {
 
         keyManager.initialize()
 
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb(),
+            ),
+            navigationBarStyle = SystemBarStyle.light(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb(),
+            ),
+        )
 
         setContent {
             PromtuzTheme {
