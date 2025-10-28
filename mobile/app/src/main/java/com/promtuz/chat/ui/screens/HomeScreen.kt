@@ -2,8 +2,10 @@ package com.promtuz.chat.ui.screens
 
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,6 +22,7 @@ import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.ShareIdentity
+import com.promtuz.chat.ui.components.Avatar
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
@@ -33,6 +36,9 @@ fun HomeScreen(
     appViewModel: AppViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
+    val direction = LocalLayoutDirection.current
+    val textTheme = MaterialTheme.typography
+    val colors = MaterialTheme.colorScheme
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     ModalNavigationDrawer(
@@ -66,12 +72,78 @@ fun HomeScreen(
                 )
             }
         }) { innerPadding ->
-            LazyColumn(Modifier.padding(innerPadding)) {
+
+            val users = listOf(
+                "John Doe" to "Hello!",
+            )
+
+
+
+            LazyColumn(
+                Modifier
+                    .padding(
+                        start = innerPadding.calculateLeftPadding(direction),
+                        end = innerPadding.calculateRightPadding(direction),
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = 0.dp
+                    )
+                    .padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 item {
-                    StatsBox()
+                    Spacer(Modifier.height(24.dp))
+                }
+
+                itemsIndexed(users) { index, (name, msg) ->
+                    val (major, minor) = 32 to 15
+                    
+                    val clip = when {
+                        users.size == 1 -> RoundedCornerShape(major)
+                        index == 0 -> RoundedCornerShape(major, major, minor, minor)
+                        index == users.lastIndex -> RoundedCornerShape(minor, minor, major, major)
+                        else -> RoundedCornerShape(minor)
+                    }
+
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(clip)
+                            .background(colors.surfaceContainer.copy(0.75f))
+                            .combinedClickable(
+                                true,
+                                onClick = {
+
+                                },
+                                onLongClick = {
+
+                                }
+                            )
+                            .padding(vertical = 10.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Avatar(name)
+
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                name,
+                                style = textTheme.titleMediumEmphasized,
+                                color = colors.onSecondaryContainer
+                            )
+
+                            Text(
+                                msg,
+                                style = textTheme.bodySmallEmphasized,
+                                color = colors.onSecondaryContainer.copy(0.7f)
+                            )
+                        }
+                    }
                 }
 
 
+                item {
+                    Spacer(Modifier.height(24.dp))
+                }
             }
         }
     }

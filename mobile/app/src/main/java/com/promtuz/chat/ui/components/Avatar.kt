@@ -39,7 +39,7 @@ fun Avatar(
         Modifier
             .size(size)
             .clip(clip)
-            .background(adjustLight(MaterialTheme.colorScheme.background, 0.05f))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(0.75f))
             .clickable(
                 enabled = true,
                 interactionSource = interactionSource,

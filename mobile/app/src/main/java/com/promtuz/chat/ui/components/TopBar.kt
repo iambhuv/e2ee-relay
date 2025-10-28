@@ -76,16 +76,5 @@ fun TopBar(quicClient: QuicClient = koinInject()) {
         },
         actions = {
             Avatar("B", 44.dp, RoundedCornerShape(16.dp))
-
-//            IconButton({
-//                navigator.push(AppRoutes.QrScreen)
-//            }) {
-//                Icon(
-//                    painter = painterResource(R.drawable.i_qr_code_scanner),
-//                    "QR Code",
-//                    Modifier,
-//                    MaterialTheme.colorScheme.onPrimaryContainer
-//                )
-//            }
         })
 }

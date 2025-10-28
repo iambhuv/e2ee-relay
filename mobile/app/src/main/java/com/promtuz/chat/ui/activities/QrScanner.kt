@@ -19,7 +19,6 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.*
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
