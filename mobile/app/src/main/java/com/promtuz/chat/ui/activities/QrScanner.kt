@@ -1,20 +1,17 @@
 package com.promtuz.chat.ui.activities
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.AttributeSet
 import android.util.Log
-import android.view.View
-import android.view.ViewGroup
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.Camera
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -23,16 +20,23 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.*
-import androidx.core.view.WindowCompat
+import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScanner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.ui.screens.QrScannerScreen
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import com.promtuz.chat.utils.extensions.then
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.max
-import kotlin.math.min
 
 
 private const val QR_DETECT_THRESHOLD = 300L; // ms
@@ -56,6 +60,7 @@ class QrScanner : AppCompatActivity() {
     lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     lateinit var imageAnalysis: ImageAnalysis
     lateinit var barcodeScanner: BarcodeScanner
+    lateinit var camera: Camera
 
     val cameraPermissionState = mutableStateOf(PermissionState.NotRequested)
     val cameraProviderState = mutableStateOf<ProcessCameraProvider?>(null)
@@ -75,12 +80,8 @@ class QrScanner : AppCompatActivity() {
     private var lastSeen = 0L
     private var lastEmpty = 0L
     val trackedQrCodes = mutableStateListOf<TrackedQr>()
-    var isScanning = false
+
     val analyzer = ImageAnalysis.Analyzer { imageProxy ->
-        if (isScanning) {
-            imageProxy.close(); return@Analyzer
-        }
-        isScanning = true
 
         val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
 
@@ -101,7 +102,7 @@ class QrScanner : AppCompatActivity() {
                 val id = barcode.rawValue ?: "${rect.centerX()}:${rect.centerY()}"
                 val scaleX = vWidth / imgW.toFloat()
                 val scaleY = vHeight / imgH.toFloat()
-                val scale = max(scaleX, scaleY)
+                val scale = max(scaleX, scaleY) * 0.75f
                 val qrWidth = rect.width() * scale
                 val qrHeight = rect.height() * scale
 
@@ -120,7 +121,6 @@ class QrScanner : AppCompatActivity() {
                 setResult(RESULT_CANCELED, Intent().putExtra("exception", exception))
             }
         }.addOnCompleteListener {
-            isScanning = false
             imageProxy.close()
         }
     }
@@ -179,34 +179,53 @@ class QrScanner : AppCompatActivity() {
         callingActivity != null
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        window.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        WindowCompat.enableEdgeToEdge(window)
-        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars =
-            false
-
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-    }
-
-    override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
-        cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-
-        imageAnalysis =
-            ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-
-        return super.onCreateView(name, context, attrs)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
+        imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+
+        val scannerOptions =
+            BarcodeScannerOptions.Builder()
+                // why bother with anything else
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .setExecutor(ContextCompat.getMainExecutor(this))
+                .setZoomSuggestionOptions(
+                    ZoomSuggestionOptions.Builder { suggestedZoom ->
+                        Log.d("QrScanner", "TRACE: ZoomSuggested at $suggestedZoom")
+
+                        val control = camera.cameraControl
+                        val info = camera.cameraInfo
+                        val current = info.zoomState.value?.zoomRatio ?: 1f
+                        val target = suggestedZoom
+                        val steps = 10
+                        val diff = (target - current) / steps
+
+                        CoroutineScope(Dispatchers.Main).launch {
+                            repeat(steps) {
+                                control.setZoomRatio(current + diff * (it + 1))
+                                delay(8)
+                            }
+                        }
+                        true
+                    }.setMaxSupportedZoomRatio(10f).build()
+                ).build()
+
+        barcodeScanner = BarcodeScanning.getClient(scannerOptions)
+
+
+        imageAnalysis.setAnalyzer(
+            ContextCompat.getMainExecutor(this), analyzer
+        )
+        cameraProviderFuture.addListener({
+            cameraProviderState.value = cameraProviderFuture.get()
+        }, ContextCompat.getMainExecutor(this))
+
+
+        enableEdgeToEdge()
         setContent {
             PromtuzTheme {
                 QrScannerScreen(this)

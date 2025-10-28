@@ -7,7 +7,6 @@ import android.os.SystemClock
 import android.util.Rational
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.ViewPort
@@ -20,22 +19,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.*
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.hapticfeedback.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
-import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.components.BackTopBar
@@ -53,7 +50,7 @@ fun QrScannerScreen(activity: QrScanner) {
 
         cameraProvider?.let {
             CameraPreview(
-                it, activity.imageAnalysis, Modifier
+                activity, it, Modifier
                     .fillMaxSize()
                     .onSizeChanged { (w, h) ->
                         activity.viewSize.value = Size(w.toFloat(), h.toFloat())
@@ -75,18 +72,7 @@ fun QrScannerScreen(activity: QrScanner) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BoxScope.ScannerUI(activity: QrScanner) {
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-
-    LaunchedEffect(Unit) {
-        activity.barcodeScanner = BarcodeScanning.getClient()
-        activity.imageAnalysis.setAnalyzer(
-            ContextCompat.getMainExecutor(context), activity.analyzer
-        )
-        activity.cameraProviderFuture.addListener({
-            activity.cameraProviderState.value = activity.cameraProviderFuture.get()
-        }, ContextCompat.getMainExecutor(context))
-    }
 
     val scanSize = with(LocalDensity.current) { 225.dp.toPx() }
     val cornerRadius = with(LocalDensity.current) { 25.dp.toPx() }
@@ -107,18 +93,18 @@ private fun BoxScope.ScannerUI(activity: QrScanner) {
         style = MaterialTheme.typography.titleLargeEmphasized
     )
 
-    val ticker = remember { mutableStateOf(0L) }
+    val ticker = remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) {
         while (true) {
-            ticker.value = SystemClock.elapsedRealtime()
-            delay(16)
+            ticker.longValue = SystemClock.elapsedRealtime()
+            delay(1)
         }
     }
 
     Canvas(
         modifier = Modifier.fillMaxSize()
     ) {
-        ticker.value
+        ticker.longValue
 
         val left = (size.width - scanSize) / 2
         val top = (size.height - scanSize) / 2
@@ -148,7 +134,7 @@ private fun BoxScope.ScannerUI(activity: QrScanner) {
 
 @Composable
 private fun CameraPreview(
-    cameraProvider: ProcessCameraProvider, imageAnalysis: ImageAnalysis, modifier: Modifier
+    activity: QrScanner, cameraProvider: ProcessCameraProvider, modifier: Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     AndroidView(
@@ -168,11 +154,12 @@ private fun CameraPreview(
                 viewPort.aspectRatio
 
                 val useCaseGroup =
-                    UseCaseGroup.Builder().addUseCase(preview).addUseCase(imageAnalysis)
+                    UseCaseGroup.Builder().addUseCase(preview).addUseCase(activity.imageAnalysis)
                         .setViewPort(viewPort).build()
 
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, useCaseGroup)
+                activity.camera =
+                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, useCaseGroup)
             }
         }, modifier = modifier
     )
