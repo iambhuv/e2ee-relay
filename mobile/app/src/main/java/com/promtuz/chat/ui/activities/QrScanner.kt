@@ -32,6 +32,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.ui.screens.QrScannerScreen
 import com.promtuz.chat.ui.theme.PromtuzTheme
+import com.promtuz.chat.utils.common.OneEuroFilter2D
 import com.promtuz.chat.utils.extensions.then
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +80,8 @@ class QrScanner : AppCompatActivity() {
 
     val trackedQrCodes = mutableListOf<TrackedQr>()
 
+    var isScanning = false
+
     fun updateTrackedQrs(new: List<TrackedQr>) {
         val now = SystemClock.elapsedRealtime()
 
@@ -101,7 +104,10 @@ class QrScanner : AppCompatActivity() {
         clear(); addAll(items)
     }
 
+    private val smoothers = mutableMapOf<String, OneEuroFilter2D>()
+
     fun mapImageToView(
+        id: String,
         rect: Rect,
         imageProxy: ImageProxy,
     ): RectF {
@@ -125,7 +131,9 @@ class QrScanner : AppCompatActivity() {
         val right = left + (rect.width() * scale)
         val bottom = top + (rect.height() * scale)
 
-        return RectF(left, top, right, bottom)
+        val map = RectF(left, top, right, bottom)
+        val smoother = smoothers.getOrPut(id) { OneEuroFilter2D() }
+        return smoother.filter(map)
     }
 
     val expectsResult: Boolean by lazy {
@@ -162,7 +170,7 @@ class QrScanner : AppCompatActivity() {
                             }
                         }
                         true
-                    }.setMaxSupportedZoomRatio(3f).build()
+                    }.setMaxSupportedZoomRatio(1.5f).build()
                 ).build()
 
         barcodeScanner = BarcodeScanning.getClient(scannerOptions)
@@ -190,6 +198,9 @@ class QrScanner : AppCompatActivity() {
 fun qrAnalyzer(
     activity: QrScanner
 ) = ImageAnalysis.Analyzer { imageProxy ->
+    activity.isScanning.then { return@Analyzer imageProxy.close() }
+    activity.isScanning = true
+
     val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
 
     val (imgW, imgH) = if (imageProxy.imageInfo.rotationDegrees % 180 == 0) imageProxy.width to imageProxy.height
@@ -204,8 +215,8 @@ fun qrAnalyzer(
             imageProxy.imageInfo.rotationDegrees - activity.display.rotation
 
             val (vHeight, vWidth) = activity.viewSize.value
-            val mapped = activity.mapImageToView(rect, imageProxy)
             val id = barcode.rawValue ?: "${rect.centerX()}:${rect.centerY()}"
+            val mapped = activity.mapImageToView(id, rect, imageProxy)
             val scaleX = vWidth / imgW.toFloat()
             val scaleY = vHeight / imgH.toFloat()
             val scale = max(scaleX, scaleY) * 0.75f
@@ -228,5 +239,6 @@ fun qrAnalyzer(
         }
     }.addOnCompleteListener {
         imageProxy.close()
+        activity.isScanning = false
     }
 }
