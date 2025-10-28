@@ -1,6 +1,7 @@
 package com.promtuz.chat.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -56,8 +57,22 @@ fun TopBar(quicClient: QuicClient = koinInject()) {
     }
 
     TopAppBar(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        colors = TopAppBarDefaults.topAppBarColors(Color.Transparent),
+        modifier = Modifier
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.2f),
+                        Color.Transparent
+                    )
+                )
+            )
+            .padding(horizontal = 16.dp),
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
             Image(
                 painterResource(R.drawable.logo_colored),
