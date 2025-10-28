@@ -160,4 +160,6 @@ dependencies {
 
     implementation(libs.barcode.scanning)
     implementation(libs.zxing.core)
+
+    implementation(libs.timber)
 }
