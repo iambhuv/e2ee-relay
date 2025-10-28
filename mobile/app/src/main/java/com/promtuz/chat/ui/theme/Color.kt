@@ -1,10 +1,14 @@
 package com.promtuz.chat.ui.theme
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.*
 import androidx.core.graphics.ColorUtils
 
 
@@ -95,5 +99,40 @@ fun outlinedFormElementsColors(): OutlinedFormElementColors {
                 adjustLight(baseColor, 0.3f).copy(0.75f),
             )
         )
+    }
+}
+
+
+@Preview(wallpaper = Wallpapers.BLUE_DOMINATED_EXAMPLE)
+@Composable
+private fun SurfaceColorsPreview(modifier: Modifier = Modifier) {
+    PromtuzTheme(true) {
+        val colors = MaterialTheme.colorScheme
+//        Box(
+//            modifier
+//                .fillMaxSize()
+//                .background(colors.secondary)
+//        ) {
+//
+//        }
+        Row(Modifier.fillMaxWidth()) {
+            ColoredBox(colors.primary, "PRIMARY")
+            ColoredBox(colors.secondary, "SECONDARY")
+            ColoredBox(colors.tertiary, "TERTIARY")
+        }
+    }
+}
+
+
+@Composable
+private fun RowScope.ColoredBox(col: Color, label: String) {
+    Box(
+        Modifier
+            .weight(1f)
+            .background(col)
+            .padding(vertical = 18.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = label, style = MaterialTheme.typography.labelMediumEmphasized)
     }
 }

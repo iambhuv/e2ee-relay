@@ -105,8 +105,12 @@ class KeyManager(context: Context) {
                 && null != prefs.getString(IDENTITY_SECRET_IV, null)
     }
 
-    /**
-     * Must clear the result buffer after use
+    /** UNSAFE: It's returning decrypted bytearray of such sensitive secret key?
+     *
+     * TODO: Create a wrapper class `SecretKey`,
+     *  it'll hold all necessary methods, even involving libcore,
+     *  decrypting the key on-demand and clearing after use
+     *
      */
     fun getSecretKey(): ByteArray? {
         val encryptedKeyStr = prefs.getString(IDENTITY_SECRET, null) ?: return null

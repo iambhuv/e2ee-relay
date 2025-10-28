@@ -3,11 +3,13 @@ package com.promtuz.chat.ui.screens
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -18,7 +20,6 @@ import com.promtuz.chat.R
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.security.KeyManager
-import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
@@ -65,8 +66,12 @@ fun HomeScreen(
                 )
             }
         }) { innerPadding ->
-            Column {
-                StatsBox(innerPadding)
+            LazyColumn(Modifier.padding(innerPadding)) {
+                item {
+                    StatsBox()
+                }
+
+
             }
         }
     }
@@ -80,7 +85,7 @@ fun formatHex(bytes: ByteArray?, c: Int = 16): String {
 
 @Composable
 fun StatsBox(
-    innerPadding: PaddingValues,
+    innerPadding: PaddingValues = PaddingValues(0.dp),
     keyManager: KeyManager = koinInject(),
     quicClient: QuicClient = koinInject()
 ) {
