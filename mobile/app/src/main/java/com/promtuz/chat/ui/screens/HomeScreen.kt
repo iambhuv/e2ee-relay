@@ -3,6 +3,7 @@ package com.promtuz.chat.ui.screens
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
@@ -19,6 +21,7 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
 import com.promtuz.chat.data.remote.QuicClient
+import com.promtuz.chat.navigation.Route
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.ShareIdentity
@@ -84,19 +87,19 @@ fun HomeScreen(
                     .padding(
                         start = innerPadding.calculateLeftPadding(direction),
                         end = innerPadding.calculateRightPadding(direction),
-                        top = innerPadding.calculateTopPadding(),
+                        top = 0.dp,
                         bottom = 0.dp
                     )
                     .padding(horizontal = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 item {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(innerPadding.calculateTopPadding()))
                 }
 
                 itemsIndexed(users) { index, (name, msg) ->
                     val (major, minor) = 32 to 15
-                    
+
                     val clip = when {
                         users.size == 1 -> RoundedCornerShape(major)
                         index == 0 -> RoundedCornerShape(major, major, minor, minor)
@@ -104,15 +107,18 @@ fun HomeScreen(
                         else -> RoundedCornerShape(minor)
                     }
 
+                    val interactionSource = remember { MutableInteractionSource() }
+
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .clip(clip)
                             .background(colors.surfaceContainer.copy(0.75f))
                             .combinedClickable(
-                                true,
+                                interactionSource = interactionSource,
+                                indication = ripple(color=colors.surfaceContainerHighest),
                                 onClick = {
-
+                                    appViewModel.navigator.chat(Route.ChatScreen(name))
                                 },
                                 onLongClick = {
 
