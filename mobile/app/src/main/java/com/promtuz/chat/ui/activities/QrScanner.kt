@@ -1,5 +1,6 @@
 package com.promtuz.chat.ui.activities
 
+import android.app.Activity.RESULT_CANCELED
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
@@ -10,13 +11,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.Camera
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.*
@@ -39,7 +40,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 
 
-private const val QR_DETECT_THRESHOLD = 300L; // ms
+private const val QR_DETECT_THRESHOLD = 50L; // ms
 
 data class TrackedQr(val id: String, var size: Size, var rect: RectF, var lastSeen: Long)
 
@@ -76,59 +77,11 @@ class QrScanner : AppCompatActivity() {
         }
     }
 
-
-    private var lastSeen = 0L
-    private var lastEmpty = 0L
-    val trackedQrCodes = mutableStateListOf<TrackedQr>()
-
-    val analyzer = ImageAnalysis.Analyzer { imageProxy ->
-
-        val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
-
-        val (imgW, imgH) = if (imageProxy.imageInfo.rotationDegrees % 180 == 0) imageProxy.width to imageProxy.height
-        else imageProxy.height to imageProxy.width
-
-        barcodeScanner.process(inputImage).addOnSuccessListener { barcodes ->
-            var trackedQrList = mutableListOf<TrackedQr>()
-
-            for (barcode in barcodes) {
-                val rect = barcode.boundingBox ?: continue
-
-                imageProxy.imageInfo.rotationDegrees - display.rotation
-
-                val (vHeight, vWidth) = viewSize.value
-
-                val mapped = mapImageToView(rect, imageProxy)
-                val id = barcode.rawValue ?: "${rect.centerX()}:${rect.centerY()}"
-                val scaleX = vWidth / imgW.toFloat()
-                val scaleY = vHeight / imgH.toFloat()
-                val scale = max(scaleX, scaleY) * 0.75f
-                val qrWidth = rect.width() * scale
-                val qrHeight = rect.height() * scale
-
-                trackedQrList.add(
-                    TrackedQr(
-                        id, Size(qrWidth, qrHeight), mapped, SystemClock.elapsedRealtime()
-                    )
-                )
-            }
-
-            updateTrackedQrs(trackedQrList)
-        }.addOnFailureListener { exception ->
-            Log.d("QrScanner", "Scan Fail: ", exception)
-
-            expectsResult.then {
-                setResult(RESULT_CANCELED, Intent().putExtra("exception", exception))
-            }
-        }.addOnCompleteListener {
-            imageProxy.close()
-        }
-    }
+    val trackedQrCodes = mutableListOf<TrackedQr>()
 
     fun updateTrackedQrs(new: List<TrackedQr>) {
         val now = SystemClock.elapsedRealtime()
 
-        // update or add
         new.forEach { qr ->
             val existing = trackedQrCodes.find { it.id == qr.id }
             if (existing != null) {
@@ -148,7 +101,7 @@ class QrScanner : AppCompatActivity() {
         clear(); addAll(items)
     }
 
-    private fun mapImageToView(
+    fun mapImageToView(
         rect: Rect,
         imageProxy: ImageProxy,
     ): RectF {
@@ -175,7 +128,7 @@ class QrScanner : AppCompatActivity() {
         return RectF(left, top, right, bottom)
     }
 
-    private val expectsResult: Boolean by lazy {
+    val expectsResult: Boolean by lazy {
         callingActivity != null
     }
 
@@ -195,35 +148,33 @@ class QrScanner : AppCompatActivity() {
                 .setExecutor(ContextCompat.getMainExecutor(this))
                 .setZoomSuggestionOptions(
                     ZoomSuggestionOptions.Builder { suggestedZoom ->
-                        Log.d("QrScanner", "TRACE: ZoomSuggested at $suggestedZoom")
-
                         val control = camera.cameraControl
                         val info = camera.cameraInfo
                         val current = info.zoomState.value?.zoomRatio ?: 1f
                         val target = suggestedZoom
-                        val steps = 10
+                        val steps = 20
                         val diff = (target - current) / steps
 
                         CoroutineScope(Dispatchers.Main).launch {
                             repeat(steps) {
                                 control.setZoomRatio(current + diff * (it + 1))
-                                delay(8)
+                                delay(16)
                             }
                         }
                         true
-                    }.setMaxSupportedZoomRatio(10f).build()
+                    }.setMaxSupportedZoomRatio(3f).build()
                 ).build()
 
         barcodeScanner = BarcodeScanning.getClient(scannerOptions)
 
 
-        imageAnalysis.setAnalyzer(
-            ContextCompat.getMainExecutor(this), analyzer
-        )
         cameraProviderFuture.addListener({
             cameraProviderState.value = cameraProviderFuture.get()
         }, ContextCompat.getMainExecutor(this))
 
+        imageAnalysis.setAnalyzer(
+            ContextCompat.getMainExecutor(this), qrAnalyzer(this)
+        )
 
         enableEdgeToEdge()
         setContent {
@@ -231,5 +182,51 @@ class QrScanner : AppCompatActivity() {
                 QrScannerScreen(this)
             }
         }
+    }
+}
+
+
+@OptIn(ExperimentalGetImage::class)
+fun qrAnalyzer(
+    activity: QrScanner
+) = ImageAnalysis.Analyzer { imageProxy ->
+    val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
+
+    val (imgW, imgH) = if (imageProxy.imageInfo.rotationDegrees % 180 == 0) imageProxy.width to imageProxy.height
+    else imageProxy.height to imageProxy.width
+
+    activity.barcodeScanner.process(inputImage).addOnSuccessListener { barcodes ->
+        val trackedQrList = mutableListOf<TrackedQr>()
+
+        for (barcode in barcodes) {
+            val rect = barcode.boundingBox ?: continue
+
+            imageProxy.imageInfo.rotationDegrees - activity.display.rotation
+
+            val (vHeight, vWidth) = activity.viewSize.value
+            val mapped = activity.mapImageToView(rect, imageProxy)
+            val id = barcode.rawValue ?: "${rect.centerX()}:${rect.centerY()}"
+            val scaleX = vWidth / imgW.toFloat()
+            val scaleY = vHeight / imgH.toFloat()
+            val scale = max(scaleX, scaleY) * 0.75f
+            val qrWidth = rect.width() * scale
+            val qrHeight = rect.height() * scale
+
+            trackedQrList.add(
+                TrackedQr(
+                    id, Size(qrWidth, qrHeight), mapped, SystemClock.elapsedRealtime()
+                )
+            )
+        }
+
+        activity.updateTrackedQrs(trackedQrList)
+    }.addOnFailureListener { exception ->
+        Log.d("QrScanner", "Scan Fail: ", exception)
+
+        activity.expectsResult.then {
+            activity.setResult(RESULT_CANCELED, Intent().putExtra("exception", exception))
+        }
+    }.addOnCompleteListener {
+        imageProxy.close()
     }
 }
