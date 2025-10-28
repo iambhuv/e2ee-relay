@@ -64,6 +64,7 @@ class QrScanner : AppCompatActivity() {
     lateinit var barcodeScanner: BarcodeScanner
     lateinit var camera: Camera
 
+    val isCameraAvailable = mutableStateOf(false)
     val cameraPermissionState = mutableStateOf(PermissionState.NotRequested)
     val cameraProviderState = mutableStateOf<ProcessCameraProvider?>(null)
     val viewSize = mutableStateOf(Size.Zero)
@@ -96,12 +97,7 @@ class QrScanner : AppCompatActivity() {
             }
         }
 
-        // remove those unseen for > threshold
         trackedQrCodes.removeAll { now - it.lastSeen > QR_DETECT_THRESHOLD }
-    }
-
-    private fun <T> SnapshotStateList<T>.setAll(items: List<T>) {
-        clear(); addAll(items)
     }
 
     private val smoothers = mutableMapOf<String, OneEuroFilter2D>()

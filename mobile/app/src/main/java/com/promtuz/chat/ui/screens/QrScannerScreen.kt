@@ -9,6 +9,7 @@ import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.Preview
@@ -16,22 +17,38 @@ import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.ViewPort
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.*
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.*
+import androidx.compose.ui.res.*
+import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.promtuz.chat.R
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.ui.activities.QrScanner
-import com.promtuz.chat.ui.components.BackTopBar
+import com.promtuz.chat.ui.text.avgSizeInStyle
 
 
 @Composable
 fun QrScannerScreen(activity: QrScanner) {
+    val textTheme = MaterialTheme.typography
+    val backHandler = LocalOnBackPressedDispatcherOwner.current
+
+    var torchEnabled by remember { mutableStateOf(false) }
+    var haveCamera by activity.isCameraAvailable
+
     Box(
         Modifier.fillMaxSize()
     ) {
@@ -53,7 +70,51 @@ fun QrScannerScreen(activity: QrScanner) {
             }
         }
 
-        BackTopBar("Scan QR")
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+            modifier = Modifier.background(Brush.verticalGradient(
+                listOf(
+                    androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f),
+                    androidx.compose.ui.graphics.Color.Transparent
+                )
+            )),
+            navigationIcon = {
+                IconButton({
+                    backHandler?.onBackPressedDispatcher?.onBackPressed()
+                }) {
+                    Icon(
+                        painter = painterResource(R.drawable.i_back),
+                        "Go Back",
+                        Modifier.size(28.dp),
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }, title = {
+                Text(
+                    "Scan QR", style = avgSizeInStyle(
+                        textTheme.titleLargeEmphasized, textTheme.titleMediumEmphasized
+                    )
+                )
+            },
+            actions = {
+                if (haveCamera) {
+                    IconButton({
+                        torchEnabled = !torchEnabled
+                        activity.camera.cameraControl.enableTorch(torchEnabled)
+                    }) {
+                        Icon(
+                            painter = if (torchEnabled) painterResource(R.drawable.i_flash_off) else painterResource(
+                                R.drawable.i_flash_on
+                            ),
+                            if (torchEnabled) "Turn Flash Off" else "Turn Flash On",
+                            Modifier,
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
+        )
     }
 }
 
@@ -138,6 +199,9 @@ private fun CameraPreview(
                 cameraProvider.unbindAll()
                 activity.camera =
                     cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, useCaseGroup)
+
+
+                activity.isCameraAvailable.value = true
             }
         }, modifier = modifier
     )
