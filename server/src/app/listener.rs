@@ -5,7 +5,6 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use axum::Router;
 use common::quic::ALPN_PROTOCALL;
 use quinn::Endpoint;
 use quinn::ServerConfig;
@@ -20,18 +19,6 @@ use tokio::sync::Mutex;
 use crate::realtime;
 use crate::realtime::SocketData;
 use crate::utils::config::AppConfig;
-
-pub async fn serve(config: &AppConfig, router: Router) -> Result<(), std::io::Error> {
-    let listener = tokio::net::TcpListener::bind(SocketAddr::new(
-        IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
-        config.server.port,
-    ))
-    .await?;
-
-    println!("[+] Listening at http://0.0.0.0:{}", config.server.port);
-
-    axum::serve(listener, router.into_make_service_with_connect_info::<SocketAddr>()).await
-}
 
 fn frame_packet(packet: &[u8]) -> Vec<u8> {
     let size: [u8; 4] = (packet.len() as u32).to_be_bytes();
