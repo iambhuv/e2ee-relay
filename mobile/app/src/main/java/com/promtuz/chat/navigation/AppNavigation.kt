@@ -8,6 +8,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -56,6 +57,7 @@ fun AppNavigation(
     val activity = LocalActivity.current
     val navigator = appViewModel.navigator
     val backStack = appViewModel.backStack
+    val motionScheme = MaterialTheme.motionScheme
 
     BackHandler(true) {
         if (!navigator.back()) {
@@ -79,30 +81,17 @@ fun AppNavigation(
         sizeTransform = SizeTransform(clip = false),
         transitionSpec = {
             ContentTransform(
-                slideInHorizontally(
-                    initialOffsetX = { it },
-                    animationSpec = tween(550, easing = FastOutSlowInEasing),
-                ), slideOutHorizontally(
-                    targetOffsetX = { -it / 3 },
-                    animationSpec = tween(550, easing = FastOutSlowInEasing)
-                ) + fadeOut(
-                    animationSpec = tween(550), targetAlpha = 0.75f
-                ),
-                targetContentZIndex = 1f
+                fadeIn(motionScheme.slowEffectsSpec()),
+                fadeOut(motionScheme.slowEffectsSpec()),
             )
         },
         popTransitionSpec = {
             ContentTransform(
-                slideInHorizontally(
-                    initialOffsetX = { -it / 3 },
-                    animationSpec = tween(550, easing = FastOutSlowInEasing)
-                ) + fadeIn(
-                    animationSpec = tween(550), initialAlpha = 0.75f
-                ), slideOutHorizontally(
-                    targetOffsetX = { it },
-                    animationSpec = tween(550, easing = FastOutSlowInEasing)
-                ),
-                targetContentZIndex = 0f
+                fadeIn(motionScheme.slowEffectsSpec()),
+                scaleOut(
+                    targetScale = 0.7f,
+                ) + fadeOut(targetAlpha = 0f),
             )
-        })
+        },
+    )
 }
