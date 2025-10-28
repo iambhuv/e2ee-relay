@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -30,7 +29,8 @@ import org.koin.compose.koinInject
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun HomeScreen(
-    keyManager: KeyManager = koinInject(), appViewModel: AppViewModel = koinViewModel()
+    keyManager: KeyManager = koinInject(),
+    appViewModel: AppViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -79,7 +79,9 @@ fun HomeScreen(
 
 fun formatHex(bytes: ByteArray?, c: Int = 16): String {
     if (bytes == null) return "nil"
-    return bytes.asSequence().map { "%02X".format(it) }.chunked(c) { it.joinToString(" ") }
+    return bytes.asSequence()
+        .map { "%02X".format(it) }
+        .chunked(c) { it.joinToString(" ") }
         .joinToString("\n")
 }
 

@@ -1,16 +1,15 @@
 package com.promtuz.chat.ui.components
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.ui.text.avgSizeInStyle
-import org.koin.compose.viewmodel.koinViewModel
 
 
 /**
@@ -20,15 +19,17 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun BackTopBar(
     title: String,
-    appViewModel: AppViewModel = koinViewModel(),
+    // appViewModel: AppViewModel = koinViewModel(),
 ) {
     val textTheme = MaterialTheme.typography
+    val backHandler = LocalOnBackPressedDispatcherOwner.current
+
 
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
             IconButton({
-                appViewModel.navigator.back()
+                backHandler?.onBackPressedDispatcher?.onBackPressed()
             }) {
                 Icon(
                     painter = painterResource(R.drawable.i_back),
