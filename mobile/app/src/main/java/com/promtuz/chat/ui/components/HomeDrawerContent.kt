@@ -36,7 +36,7 @@ fun HomeDrawerContent(modifier: Modifier = Modifier) {
                     "Blocked Users" to R.drawable.i_user_blocked
                 ),
                 listOf(
-                    "Settings" to R.drawable.i_settings,
+                    "Settings" to R.drawable.oi_settings,
                     "About" to R.drawable.oi_info
                 )
             )
