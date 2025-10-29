@@ -26,6 +26,7 @@ import com.promtuz.chat.presentation.viewmodel.AppViewModel
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.Avatar
+import com.promtuz.chat.ui.components.HomeDrawerContent
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
@@ -46,22 +47,7 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        drawerContent = {
-            BoxWithConstraints {
-                val maxWidth = maxWidth * 0.8f
-
-                ModalDrawerSheet(
-                    modifier = Modifier.widthIn(min = 200.dp, max = maxWidth)
-                ) {
-                    keyManager.getPublicKey()?.let {
-                        Text("Scan Me Please", modifier = Modifier.padding(16.dp))
-                        HorizontalDivider()
-                        QrCode(it, Modifier.padding(32.dp))
-                        HorizontalDivider()
-                    }
-                }
-            }
-        },
+        drawerContent = { HomeDrawerContent() },
     ) {
         Scaffold(topBar = { TopBar() }, floatingActionButton = {
             FloatingActionButton({
