@@ -37,6 +37,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.max
 
 
@@ -227,7 +228,7 @@ fun qrAnalyzer(
 
         activity.updateTrackedQrs(trackedQrList)
     }.addOnFailureListener { exception ->
-        Log.d("QrScanner", "Scan Fail: ", exception)
+        Timber.tag("QrScanner").e(exception, "Scan Fail: ")
 
         activity.expectsResult.then {
             activity.setResult(RESULT_CANCELED, Intent().putExtra("exception", exception))

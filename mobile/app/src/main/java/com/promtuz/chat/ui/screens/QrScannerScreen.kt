@@ -5,6 +5,7 @@ package com.promtuz.chat.ui.screens
 import android.Manifest
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
@@ -26,7 +27,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.*
@@ -39,6 +39,7 @@ import com.promtuz.chat.R
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.text.avgSizeInStyle
+import com.promtuz.chat.ui.views.QrOverlayView
 
 
 @Composable
@@ -131,43 +132,7 @@ private fun CameraPreview(
                     scaleType = PreviewView.ScaleType.FILL_CENTER
                 }
 
-                val previewOverlay = object : View(context) {
-                    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                        style = Paint.Style.STROKE
-                        strokeWidth = 4f
-                        color = Color.GREEN
-                    }
-
-                    private val frameRunnable = object : Runnable {
-                        override fun run() {
-                            invalidate()
-                            postOnAnimation(this)
-                        }
-                    }
-
-                    init {
-                        setWillNotDraw(false)
-                    }
-
-                    override fun onAttachedToWindow() {
-                        super.onAttachedToWindow()
-                        post(frameRunnable)
-                    }
-
-                    override fun onDetachedFromWindow() {
-                        removeCallbacks(frameRunnable)
-                        super.onDetachedFromWindow()
-                    }
-
-
-                    override fun onDraw(canvas: android.graphics.Canvas) {
-                        super.onDraw(canvas)
-
-                        for (qr in activity.trackedQrCodes) {
-                            canvas.drawRoundRect(qr.rect, 20f, 20f, paint)
-                        }
-                    }
-                }.apply {
+                val previewOverlay = QrOverlayView(context).apply {
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
