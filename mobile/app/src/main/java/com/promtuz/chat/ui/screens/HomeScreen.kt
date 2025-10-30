@@ -63,7 +63,21 @@ fun HomeScreen(
         }) { innerPadding ->
 
             val users = listOf(
-                "John Doe" to "Hello!",
+                "Alice Chen" to "See you tomorrow!",
+                "Bob Martinez" to "Did you get the files?",
+                "Sarah Williams" to "Thanks for the help 😊",
+                "Mike Johnson" to "Running late, be there in 10",
+                "Emma Davis" to "That sounds great!",
+                "Alex Kim" to "Can we reschedule?",
+                "Lisa Brown" to "Just finished the meeting",
+                "Tom Anderson" to "Check out this link",
+                "Nina Patel" to "Happy birthday! 🎉",
+                "Chris Lee" to "I'll send it over now",
+                "Maya Rodriguez" to "Perfect timing",
+                "David Smith" to "Let me know when you're free",
+                "Sophie Turner" to "Absolutely!",
+                "Ryan Cooper" to "Got it, thanks",
+                "Zara Ahmed" to "On my way",
             )
 
 
