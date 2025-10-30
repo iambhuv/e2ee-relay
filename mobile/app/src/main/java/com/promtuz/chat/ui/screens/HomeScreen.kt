@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
+import com.promtuz.chat.data.dummy.dummyChats
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.navigation.Route
 import com.promtuz.chat.presentation.viewmodel.AppViewModel
@@ -27,9 +28,9 @@ import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.Avatar
 import com.promtuz.chat.ui.components.HomeDrawerContent
-import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
+import com.promtuz.chat.utils.common.parseMessageDate
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -61,27 +62,6 @@ fun HomeScreen(
                 )
             }
         }) { innerPadding ->
-
-            val users = listOf(
-                "Alice Chen" to "See you tomorrow!",
-                "Bob Martinez" to "Did you get the files?",
-                "Sarah Williams" to "Thanks for the help 😊",
-                "Mike Johnson" to "Running late, be there in 10",
-                "Emma Davis" to "That sounds great!",
-                "Alex Kim" to "Can we reschedule?",
-                "Lisa Brown" to "Just finished the meeting",
-                "Tom Anderson" to "Check out this link",
-                "Nina Patel" to "Happy birthday! 🎉",
-                "Chris Lee" to "I'll send it over now",
-                "Maya Rodriguez" to "Perfect timing",
-                "David Smith" to "Let me know when you're free",
-                "Sophie Turner" to "Absolutely!",
-                "Ryan Cooper" to "Got it, thanks",
-                "Zara Ahmed" to "On my way",
-            )
-
-
-
             LazyColumn(
                 Modifier
                     .padding(
@@ -97,13 +77,19 @@ fun HomeScreen(
                     Spacer(Modifier.height(innerPadding.calculateTopPadding()))
                 }
 
-                itemsIndexed(users) { index, (name, msg) ->
+                itemsIndexed(dummyChats) { index, (name, msg) ->
                     val (major, minor) = 32 to 15
 
                     val clip = when {
-                        users.size == 1 -> RoundedCornerShape(major)
+                        dummyChats.size == 1 -> RoundedCornerShape(major)
                         index == 0 -> RoundedCornerShape(major, major, minor, minor)
-                        index == users.lastIndex -> RoundedCornerShape(minor, minor, major, major)
+                        index == dummyChats.lastIndex -> RoundedCornerShape(
+                            minor,
+                            minor,
+                            major,
+                            major
+                        )
+
                         else -> RoundedCornerShape(minor)
                     }
 
@@ -116,7 +102,7 @@ fun HomeScreen(
                             .background(colors.surfaceContainer.copy(0.75f))
                             .combinedClickable(
                                 interactionSource = interactionSource,
-                                indication = ripple(color=colors.surfaceContainerHighest),
+                                indication = ripple(color = colors.surfaceContainerHighest),
                                 onClick = {
                                     appViewModel.navigator.chat(Route.ChatScreen(name))
                                 },
@@ -131,17 +117,31 @@ fun HomeScreen(
                         Avatar(name)
 
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                name,
-                                style = textTheme.titleMediumEmphasized,
-                                color = colors.onSecondaryContainer
-                            )
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    name,
+                                    style = textTheme.titleMediumEmphasized,
+                                    color = colors.onSecondaryContainer
+                                )
 
-                            Text(
-                                msg,
-                                style = textTheme.bodySmallEmphasized,
-                                color = colors.onSecondaryContainer.copy(0.7f)
-                            )
+                                Text(
+                                    parseMessageDate(msg.timestamp),
+                                    style = textTheme.bodySmallEmphasized,
+                                    color = colors.onSecondaryContainer.copy(0.5f)
+                                )
+                            }
+
+                            msg.content?.let {
+                                Text(
+                                    it,
+                                    style = textTheme.bodySmallEmphasized,
+                                    color = colors.onSecondaryContainer.copy(0.7f)
+                                )
+                            }
                         }
                     }
                 }

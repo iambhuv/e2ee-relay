@@ -1,7 +1,6 @@
 package com.promtuz.chat.data.local.databases
 
 import androidx.room.ColumnInfo
-import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -25,7 +24,6 @@ data class User(
         return key.contentHashCode()
     }
 }
-
 
 //@Dao
 //interface UserDao {
