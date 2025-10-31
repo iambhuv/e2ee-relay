@@ -24,6 +24,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import tech.kwik.core.QuicClientConnection
 import tech.kwik.core.QuicConnection
+import timber.log.Timber
 import java.net.URI
 import java.time.Duration
 
@@ -58,7 +59,6 @@ enum class ConnectionStatus {
 }
 
 class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto) : KoinComponent {
-    //    private val addr = Pair("192.168.100.137", 4433)
     private val addr = Pair("arch.local", 4433)
     var connection: QuicClientConnection? = null
 
@@ -87,7 +87,7 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
-    suspend fun connectScoped(context: Context, listener: Listener) {
+    fun connectScoped(context: Context, listener: Listener) {
         try {
             if (!hasInternetConnectivity(context)) {
                 _status.value = ConnectionStatus.NetworkError
@@ -138,7 +138,7 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
 
             _status.value = ConnectionStatus.Disconnected
 
-            Log.e("QuicClient", "Failed to Connect : $e")
+            Timber.tag("QuicClient").d("Failed to Connect : $e")
         }
     }
 
@@ -148,6 +148,9 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
         }
     }
 
+    /**
+     * @throws IOException if sharedSecret is null
+     */
     @OptIn(ExperimentalSerializationApi::class)
     fun prepareMsg(
         ev: ClientEvents,

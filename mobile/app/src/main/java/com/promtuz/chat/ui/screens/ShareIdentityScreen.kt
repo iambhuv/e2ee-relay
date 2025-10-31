@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.QrScanner
+import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.BackTopBar
 import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.text.avgSizeInStyle
@@ -34,6 +35,7 @@ import org.koin.compose.koinInject
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 @Composable
 fun ShareIdentityScreen(
+    activity: ShareIdentity,
     keyManager: KeyManager = koinInject()
 ) {
     val theme = MaterialTheme
