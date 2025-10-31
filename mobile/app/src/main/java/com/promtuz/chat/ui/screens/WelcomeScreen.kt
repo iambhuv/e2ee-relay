@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.focus.*
@@ -52,12 +51,13 @@ import org.koin.compose.KoinApplicationPreview
 
 @Composable
 fun WelcomeScreen(
-    modifier: Modifier = Modifier, vm: WelcomeViewModel = koinViewModel()
+    modifier: Modifier = Modifier,
+    welcomeViewModel: WelcomeViewModel = koinViewModel()
 ) {
 
     val context = LocalContext.current
 
-    val state by vm.uiState
+    val state by welcomeViewModel.uiState
     val isTryingToContinue by remember { derivedStateOf { state.status != WelcomeStatus.Normal } }
 
     val focusManager = LocalFocusManager.current
@@ -65,7 +65,6 @@ fun WelcomeScreen(
     Box(
         modifier
             .fillMaxSize()
-            // .padding(paddingValues)
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .pointerInput(Unit) {
@@ -95,8 +94,8 @@ fun WelcomeScreen(
             )
 
             OutlinedFormElements.TextField(
-                value = state.displayName,
-                onValueChange = { vm.onChange(WelcomeField.DisplayName, it) },
+                value = state.nickname,
+                onValueChange = { welcomeViewModel.onChange(WelcomeField.Nickname, it) },
                 placeholder = stringResource(R.string.welcome_screen_example_name),
                 enabled = !isTryingToContinue,
                 readOnly = isTryingToContinue,
@@ -110,8 +109,6 @@ fun WelcomeScreen(
             Spacer(Modifier.height(6.dp))
 
             Spacer(Modifier.height(6.dp))
-
-            val scope = rememberCoroutineScope()
 
             AnimatedContent(
                 state.errorText,
@@ -136,7 +133,7 @@ fun WelcomeScreen(
 
             Button(
                 {
-                    vm.`continue` {
+                    welcomeViewModel.`continue` {
                         context.startActivity(Intent(context, App::class.java))
                         (context as? Activity)?.finish()
                     }
