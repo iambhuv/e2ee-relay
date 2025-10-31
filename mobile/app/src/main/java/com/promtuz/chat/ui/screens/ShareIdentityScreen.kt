@@ -23,6 +23,7 @@ import androidx.compose.ui.res.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
+import com.promtuz.chat.domain.model.Identity
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.activities.ShareIdentity
@@ -40,8 +41,10 @@ fun ShareIdentityScreen(
 ) {
     val theme = MaterialTheme
 
-    val bytes = remember { keyManager.getPublicKey() }
+    val key = remember { keyManager.getPublicKey() }
         ?: throw Exception("Identity Public Key Unavailable in Share Screen")
+
+    val identity = Identity(key.asList())
 
     Scaffold(
         topBar = { TopBar() }) { innerPadding ->
@@ -62,14 +65,14 @@ fun ShareIdentityScreen(
                     .padding(32.dp), verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
                 QrCode(
-                    bytes,
+                    identity.toByteArray(),
                     Modifier
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally)
                         .aspectRatio(1f)
                 )
 
-                PublicKeyBytesHex(bytes)
+                // PublicKeyBytesHex(bytes)
             }
 
             Column(
