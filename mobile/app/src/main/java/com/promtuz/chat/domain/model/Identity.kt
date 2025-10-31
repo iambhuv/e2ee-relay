@@ -27,8 +27,8 @@ private const val QR_MAGIC_NUMBER: UInt = 0x0750545au
  */
 data class Identity(
     val key: List<Byte>,
-    val token: List<Byte>?,
-    val nickname: String = ""
+    val nickname: String = "",
+    val token: List<Byte>? = null,
 ) {
     init {
         require(key.size == 32) { "Identity Public Key must be 32 bytes" }
@@ -92,7 +92,7 @@ data class Identity(
                     ""
                 }
 
-                return Identity(key.toList(), token?.toList(), nickname)
+                return Identity(key.toList(), nickname, token?.toList())
             } catch (_: Exception) {
                 return null
             }
