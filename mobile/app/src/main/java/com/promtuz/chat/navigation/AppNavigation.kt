@@ -76,7 +76,6 @@ fun AppNavigation(
             entry<Route.App> { HomeScreen() }
             entry<Route.ProfileScreen> { Text("Profile") }
             entry<Route.ChatScreen> { key -> ChatScreen(key.userId) }
-            entry<Route.ShareIdentityScreen> { ShareIdentityScreen() }
         },
         sizeTransform = SizeTransform(clip = false),
         transitionSpec = {
