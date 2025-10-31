@@ -1,6 +1,6 @@
 package com.promtuz.chat.data.remote.realtime
 
-import android.util.Log
+import com.promtuz.chat.data.remote.ConnectionError
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.data.remote.dto.Bytes
 import com.promtuz.chat.data.remote.events.Client
@@ -15,10 +15,10 @@ import com.promtuz.rust.Crypto
 import com.promtuz.rust.EncryptedData
 import com.promtuz.rust.Info
 import com.promtuz.rust.Salts
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
@@ -61,7 +61,6 @@ class Handshake(
         var hello: Bytes? = null
     }
 
-
     val serverPublicKey
         get(): Bytes? {
             return this.serverEphemeralPublicKey
@@ -72,125 +71,88 @@ class Handshake(
             return this.keyPair
         }
 
-    interface Listener {
-        fun onHandshakeSuccess(sharedSecret: ByteArray)
-        fun onHandshakeReject(reason: Server.UnsafeReject)
-        fun onHandshakeFailure(error: Exception)
-    }
-
-    private fun listener(listener: Listener) {
-        val recv = stream?.inputStream ?: return
-        while (true) {
-            try {
-                val packetSizeBuffer = recv.readNBytes(4)
-                val packetSize =
-                    ByteBuffer.wrap(packetSizeBuffer).order(ByteOrder.BIG_ENDIAN).int.toUInt()
-
-                val packet = recv.readNBytes(packetSize.toInt())
-
-                Log.d("Handshake", "Got Packet : ${packet.toHexString()}")
-
-                when (val data = cborDecode<Server.UnsafeHello>(packet)
-                    ?: cborDecode<Server.UnsafeReject>(packet)
-                    ?: cborDecode<EncryptedData>(packet)) {
-                    is Server.UnsafeHello -> {
-                        this.serverEphemeralPublicKey = data.epk
-
-                        val isk = keyManager.getSecretKey() as ByteArray
-
-                        Log.d(
-                            "Handshake",
-                            "Using AEAD(Hello) : ${(AD.hello as Bytes).bytes.toHexString()}"
-                        )
-
-                        val proof = crypto.decryptData(
-                            data.msg.cipher.bytes,
-                            data.msg.nonce.bytes,
-                            crypto.deriveSharedKey(
-                                crypto.diffieHellman(isk, data.epk.bytes),
-                                Salts.HANDSHAKE,
-                                Info.SERVER_HANDSHAKE_SV_TO_CL
-                            ),
-                            (AD.hello as Bytes).bytes
-                        )
-
-                        Log.d("Handshake", "Proof : ${proof.toHexString()}")
-
-                        this.sharedSecret =
-                            crypto.ephemeralDiffieHellman(this.keyPair.esk, data.epk.bytes)
-
-                        val payload = quicClient.prepareMsg(
-                            ConnectionEvents.Connect(Bytes(proof)),
-                            sharedSecret = sharedSecret
-                        )
-
-                        Log.d("Handshake", "Sending Connect : ${payload.toHexString()}")
-
-                        stream?.outputStream?.write(framePacket(payload))
-                        stream?.outputStream?.flush()
-                    }
-
-                    is Server.UnsafeReject -> {
-                        Log.e("Handshake", "Handshake Rejected with Reason $data")
-
-                        listener.onHandshakeReject(data)
-                    }
-
-                    is EncryptedData -> {
-                        when (cborDecode<ServerEvents>(
-                            eventize(
-                                crypto.decryptData(
-                                    data.cipher.bytes,
-                                    data.nonce.bytes,
-                                    crypto.deriveSharedKey(
-                                        sharedSecret,
-                                        Salts.EVENT,
-                                        Info.SERVER_EVENT_SV_TO_CL
-                                    ),
-                                    ByteArray(0)
-                                )
-                            )
-                        )) {
-                            is ConnectionEvents.Accept -> {
-                                listener.onHandshakeSuccess(sharedSecret)
-                            }
-
-                            else -> {}
-                        }
-                    }
-
-                    else -> {}
-                }
-
-            } catch (e: Exception) {
-                if ("Connection closed" !in e.toString()) {
-                    Log.e("Handshake", "QUIC Handshake Failed:", e)
-                    listener.onHandshakeFailure(e)
-                }
-                break
-            }
-        }
-    }
-
-    fun initialize(listener: Listener) {
-        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-            listener(listener)
-        }
-
-        val keyPair = crypto.getEphemeralKeypair();
-
-        this.keyPair = EphemeralKeyPair(keyPair.first, Bytes(keyPair.second))
-
-        keyManager.getPublicKey()?.let { identityPublicKey ->
-            val hello = Client.HelloPayload(
-                Bytes(identityPublicKey), Bytes(this.keyPair.epk.bytes)
+    private suspend fun listener(): ByteArray = withContext(Dispatchers.IO) {
+        val recv = stream?.inputStream ?: throw IOException("No stream")
+        while (recv.available() != -1) {
+            val packet = recv.readNBytes(
+                ByteBuffer.wrap(recv.readNBytes(4))
+                    .order(ByteOrder.BIG_ENDIAN).int
             )
 
-            val payload = AppCbor.instance.encodeToByteArray(hello)
-            AD.hello = Bytes(payload)
+            when (val data = cborDecode<Server.UnsafeHello>(packet)
+                ?: cborDecode<Server.UnsafeReject>(packet)
+                ?: cborDecode<EncryptedData>(packet)) {
+                is Server.UnsafeHello -> handleServerHello(data)
+                is Server.UnsafeReject -> throw ConnectionError.HandshakeFailed("Rejected: $data")
+                is EncryptedData -> when (decodeServerEvent(data)) {
+                    is ConnectionEvents.Accept -> {
+                        recv.close()
+                        return@withContext sharedSecret
+                    }
 
-            stream?.outputStream?.write(framePacket(payload))
-            stream?.outputStream?.flush()
+                    null -> {}
+                }
+            }
         }
+
+        throw ConnectionError.HandshakeFailed("Stream Closed")
+    }
+
+    suspend fun initialize(): ByteArray = coroutineScope {
+        val keyPair = crypto.getEphemeralKeypair();
+
+        this@Handshake.keyPair = EphemeralKeyPair(keyPair.first, Bytes(keyPair.second))
+
+        val identityPublicKey = keyManager.getPublicKey()
+            ?: throw IOException("Identity Public Key Unavailable in KeyManager")
+
+        val hello = Client.HelloPayload(
+            Bytes(identityPublicKey), Bytes(this@Handshake.keyPair.epk.bytes)
+        )
+
+        val payload = AppCbor.instance.encodeToByteArray(hello)
+        AD.hello = Bytes(payload)
+
+        stream?.outputStream?.write(framePacket(payload))
+        stream?.outputStream?.flush()
+
+        listener()
+    }
+
+
+    private fun handleServerHello(data: Server.UnsafeHello) {
+        this.serverEphemeralPublicKey = data.epk
+
+        val isk = keyManager.getSecretKey() as ByteArray
+
+        val proof = crypto.decryptData(
+            data.msg.cipher.bytes, data.msg.nonce.bytes, crypto.deriveSharedKey(
+                crypto.diffieHellman(isk, data.epk.bytes),
+                Salts.HANDSHAKE,
+                Info.SERVER_HANDSHAKE_SV_TO_CL
+            ), (AD.hello as Bytes).bytes
+        )
+
+        this.sharedSecret = crypto.ephemeralDiffieHellman(this.keyPair.esk, data.epk.bytes)
+
+        val payload = quicClient.prepareMsg(
+            ConnectionEvents.Connect(Bytes(proof)), sharedSecret = sharedSecret
+        )
+
+        stream?.outputStream?.write(framePacket(payload))
+        stream?.outputStream?.flush()
+    }
+
+
+    private fun decodeServerEvent(data: EncryptedData): ServerEvents? {
+        return cborDecode<ServerEvents>(
+            eventize(
+                crypto.decryptData(
+                    data.cipher.bytes, data.nonce.bytes, crypto.deriveSharedKey(
+                        sharedSecret, Salts.EVENT, Info.SERVER_EVENT_SV_TO_CL
+                    ), ByteArray(0)
+                )
+            )
+        )
     }
 }

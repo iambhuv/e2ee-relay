@@ -6,13 +6,14 @@ import android.net.NetworkCapabilities
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.promtuz.chat.data.remote.events.ClientEvents
-import com.promtuz.chat.data.remote.events.Server
 import com.promtuz.chat.data.remote.realtime.Handshake
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.utils.serialization.AppCbor
 import com.promtuz.rust.Crypto
 import com.promtuz.rust.Info
 import com.promtuz.rust.Salts
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
@@ -38,20 +39,25 @@ fun framePacket(packet: ByteArray): ByteArray {
     return u32size(packet.size) + packet
 }
 
-sealed class ConnectionError {
-    object NoInternet : ConnectionError()
-    object ServerUnreachable : ConnectionError()
-    object Timeout : ConnectionError()
+sealed class ConnectionError : Throwable() {
+    object NoInternet : ConnectionError() {
+        private fun readResolve(): Any = NoInternet
+    }
+
+    object ServerUnreachable : ConnectionError() {
+        private fun readResolve(): Any = ServerUnreachable
+    }
+
+    object Timeout : ConnectionError() {
+        private fun readResolve(): Any = Timeout
+    }
+
     data class HandshakeFailed(val reason: String) : ConnectionError()
     data class Unknown(val exception: Exception) : ConnectionError()
 }
 
 enum class ConnectionStatus {
-    Disconnected,
-    Connecting,
-    NetworkError,
-    HandshakeFailed,
-    Connected
+    Disconnected, Connecting, NetworkError, HandshakeFailed, Connected
 }
 
 class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto) : KoinComponent {
@@ -67,11 +73,6 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
 
     private lateinit var sharedSecret: ByteArray
 
-    interface Listener {
-        fun onConnectionSuccess()
-        fun onConnectionFailure(e: ConnectionError)
-    }
-
     private fun hasInternetConnectivity(context: Context): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -79,62 +80,38 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
 
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && capabilities.hasCapability(
+            NetworkCapabilities.NET_CAPABILITY_VALIDATED
+        )
     }
 
-    fun connect(context: Context, listener: Listener) {
+    suspend fun connect(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
+        if (!hasInternetConnectivity(context)) {
+            return@withContext Result.failure(ConnectionError.NoInternet)
+        }
         try {
-            if (!hasInternetConnectivity(context)) {
-                _status.value = ConnectionStatus.NetworkError
-                return listener.onConnectionFailure(ConnectionError.NoInternet)
-            }
-
-            if (connection !== null) {
-                connection?.close(1001, "Reinitiating Connection")
-                _status.value = ConnectionStatus.Disconnected
-            }
-
-            _status.value = ConnectionStatus.Connecting
-
-            val conn =
-                QuicClientConnection.newBuilder().version(QuicConnection.QuicVersion.V1)
-                    .uri(URI("https://${addr.first}:${addr.second}"))
-                    .applicationProtocol("ProtoCall")
-                    .noServerCertificateCheck()
-                    .maxIdleTimeout(Duration.ofHours(1))
-                    .build()
+            connection?.close(1001, "Reinitiating Connection")
+            val conn = QuicClientConnection.newBuilder()
+                .version(QuicConnection.QuicVersion.V1)
+                .uri(URI("https://${addr.first}:${addr.second}"))
+                .applicationProtocol("ProtoCall")
+                .noServerCertificateCheck()
+                .maxIdleTimeout(Duration.ofHours(1))
+                .build()
 
             connection = conn
-
+            _status.value = ConnectionStatus.Connecting
             conn.connect()
 
             _handshake = Handshake(get(), get(), this@QuicClient)
-            _handshake.initialize(object : Handshake.Listener {
-                override fun onHandshakeSuccess(sharedSecret: ByteArray) {
-                    this@QuicClient.sharedSecret = sharedSecret
-                    listener.onConnectionSuccess()
+            sharedSecret = _handshake.initialize()
+            _status.value = ConnectionStatus.Connected
 
-                    _status.value = ConnectionStatus.Connected
-                }
-
-                override fun onHandshakeReject(reason: Server.UnsafeReject) {
-                    listener.onConnectionFailure(ConnectionError.HandshakeFailed("Connection Rejected : $reason"))
-                    _status.value = ConnectionStatus.HandshakeFailed
-                }
-
-                override fun onHandshakeFailure(error: Exception) {
-                    listener.onConnectionFailure(ConnectionError.Unknown(error))
-                    _status.value = ConnectionStatus.HandshakeFailed
-                }
-            })
-
+            Result.success(Unit)
         } catch (e: Exception) {
-            listener.onConnectionFailure(ConnectionError.Unknown(e))
-
-            _status.value = ConnectionStatus.Disconnected
-
+            _status.value = ConnectionStatus.HandshakeFailed
             Timber.tag("QuicClient").d("Failed to Connect : $e")
+            Result.failure(e)
         }
     }
 

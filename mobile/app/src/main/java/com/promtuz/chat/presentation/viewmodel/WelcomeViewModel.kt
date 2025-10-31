@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.promtuz.chat.data.local.databases.AppDatabase
 import com.promtuz.chat.data.local.entities.User
 import com.promtuz.chat.data.remote.ConnectionError
@@ -25,8 +26,7 @@ class WelcomeViewModel(
     private val core: Core,
     private val application: Application,
     appDatabase: AppDatabase
-) : ViewModel(),
-    KoinComponent {
+) : ViewModel(), KoinComponent {
     private val context: Context get() = application.applicationContext
     private val users = appDatabase.userDao()
 
@@ -34,9 +34,7 @@ class WelcomeViewModel(
 
     private val _uiState = mutableStateOf(
         WelcomeUiState(
-            "",
-            WelcomeStatus.Normal,
-            null
+            "", WelcomeStatus.Normal, null
         )
     )
     val uiState: State<WelcomeUiState> = _uiState
@@ -76,45 +74,26 @@ class WelcomeViewModel(
         keyManager.storeSecretKey(secret) // secret is emptied
         keyManager.storePublicKey(public)
 
-        onChange(WelcomeField.Status, WelcomeStatus.Connecting)
+        _uiState.value = _uiState.value.copy(status = WelcomeStatus.Connecting)
 
         if (!::quicClient.isInitialized) quicClient = inject<QuicClient>().value
 
-        // TODO: Setup Connection State Listener, to update the UI ig?
-        quicClient.connect(context, object : QuicClient.Listener {
-            override fun onConnectionFailure(e: ConnectionError) {
-                // reverting
-                onChange(WelcomeField.Status, WelcomeStatus.Normal)
-
-                when (e) {
-                    is ConnectionError.HandshakeFailed -> {
-                        onChange(WelcomeField.Error, "Handshake Rejected : ${e.reason}")
-                    }
-
-                    ConnectionError.NoInternet -> {
-                        onChange(WelcomeField.Error, "No Internet")
-                    }
-
-                    ConnectionError.ServerUnreachable -> {
-                        onChange(WelcomeField.Error, "Server Unreachable")
-                    }
-
-                    ConnectionError.Timeout -> {
-                        onChange(WelcomeField.Error, "Connection Timed Out")
-                    }
-
-                    is ConnectionError.Unknown -> {
-                        onChange(WelcomeField.Error, e.exception.toString())
-                    }
-                }
-            }
-
-            override fun onConnectionSuccess() {
-                onChange(WelcomeField.Status, WelcomeStatus.Success)
-
+        viewModelScope.launch {
+            quicClient.connect(context).onSuccess {
+                _uiState.value = _uiState.value.copy(status = WelcomeStatus.Success)
                 onSuccess()
-            }
-        })
-    }
+            }.onFailure {
+                val errorText = when (val e = it) {
+                    is ConnectionError.HandshakeFailed -> "Handshake Rejected : ${e.reason}"
+                    ConnectionError.NoInternet -> "No Internet"
+                    ConnectionError.ServerUnreachable -> "Server Unreachable"
+                    ConnectionError.Timeout -> "Connection Timed Out"
+                    is ConnectionError.Unknown -> e.exception.toString()
+                    else -> it.message
+                }
 
+                _uiState.value = _uiState.value.copy(errorText = errorText)
+            }
+        }
+    }
 }

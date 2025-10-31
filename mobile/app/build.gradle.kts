@@ -124,7 +124,6 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.material3.adaptive.navigation3)
-    implementation(libs.kotlinx.serialization.core)
 
     implementation(libs.androidx.core.splashscreen)
 
@@ -134,8 +133,12 @@ dependencies {
 
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.cbor)
+
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 
 
     implementation(project.dependencies.platform(libs.koin.bom))
