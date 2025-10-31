@@ -21,6 +21,7 @@ import org.koin.android.ext.android.inject
  *  - The exact config of hashing will not be standardized for app,
  *    but rather be chosen via circumstances of course backed by limits for minimum
  *  - Must add support for automatically storing the backup on certain cloud storage services like Google Drive
+ *  - Add support for linking with decentralized networks like ENS for easy identity sharing
  *
  *  User must provide a "secure" password for encrypting the secret key.
  *  Hence, this encrypted blob is somewhat safe to move around *i suppose?*.
