@@ -5,7 +5,7 @@ import com.promtuz.chat.R
 
 
 sealed class WelcomeField {
-    object DisplayName : WelcomeField()
+    object Nickname : WelcomeField()
     object Status : WelcomeField()
     object Error : WelcomeField()
 }
@@ -18,7 +18,7 @@ sealed class WelcomeStatus(@param:StringRes val text: Int) {
 }
 
 data class WelcomeUiState(
-    val displayName: String,
+    val nickname: String,
     val status: WelcomeStatus,
     val errorText: String?
 )

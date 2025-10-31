@@ -5,6 +5,8 @@ import android.content.Context
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.promtuz.chat.data.local.databases.AppDatabase
+import com.promtuz.chat.data.local.entities.User
 import com.promtuz.chat.data.remote.ConnectionError
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.presentation.state.WelcomeField
@@ -12,16 +14,21 @@ import com.promtuz.chat.presentation.state.WelcomeStatus
 import com.promtuz.chat.presentation.state.WelcomeUiState
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.rust.Core
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class WelcomeViewModel(
     private val keyManager: KeyManager,
     private val core: Core,
-    private val application: Application
+    private val application: Application,
+    appDatabase: AppDatabase
 ) : ViewModel(),
     KoinComponent {
     private val context: Context get() = application.applicationContext
+    private val users = appDatabase.userDao()
 
     lateinit var quicClient: QuicClient
 
@@ -36,7 +43,7 @@ class WelcomeViewModel(
 
     fun <T> onChange(field: WelcomeField, value: T) {
         _uiState.value = when (field) {
-            WelcomeField.DisplayName -> _uiState.value.copy(displayName = value as String)
+            WelcomeField.Nickname -> _uiState.value.copy(nickname = value as String)
             WelcomeField.Error -> _uiState.value.copy(errorText = value as String?)
             WelcomeField.Status -> _uiState.value.copy(status = value as WelcomeStatus)
         }
@@ -60,6 +67,10 @@ class WelcomeViewModel(
 
         // Step 1.
         val (secret, public) = core.getStaticKeypair()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            users.insert(User(public.toList(), _uiState.value.nickname))
+        }
 
         // Step 2.
         keyManager.storeSecretKey(secret) // secret is emptied
@@ -104,15 +115,6 @@ class WelcomeViewModel(
                 onSuccess()
             }
         })
-
-        // Step 3.
-        // Need a user repository, which will have registering the pub key, modifying the profile etc
-
-        // Step 4.
-        // Need to make the server support QUIC first, then make handler in client aswell
-
-        // Step 5.
-        // of   course
     }
 
 }

@@ -3,7 +3,6 @@ package com.promtuz.chat.data.remote
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.promtuz.chat.data.remote.events.ClientEvents
@@ -14,9 +13,6 @@ import com.promtuz.chat.utils.serialization.AppCbor
 import com.promtuz.rust.Crypto
 import com.promtuz.rust.Info
 import com.promtuz.rust.Salts
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.io.IOException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
@@ -87,7 +83,7 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
-    fun connectScoped(context: Context, listener: Listener) {
+    fun connect(context: Context, listener: Listener) {
         try {
             if (!hasInternetConnectivity(context)) {
                 _status.value = ConnectionStatus.NetworkError
@@ -139,12 +135,6 @@ class QuicClient(private val keyManager: KeyManager, private val crypto: Crypto)
             _status.value = ConnectionStatus.Disconnected
 
             Timber.tag("QuicClient").d("Failed to Connect : $e")
-        }
-    }
-
-    fun connect(context: Context, listener: Listener) {
-        CoroutineScope(Dispatchers.IO).launch {
-            connectScoped(context, listener)
         }
     }
 
