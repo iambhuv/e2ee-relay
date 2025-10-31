@@ -8,7 +8,7 @@ import androidx.navigation3.runtime.NavKey
 import com.promtuz.chat.navigation.AppNavigator
 import com.promtuz.chat.navigation.Route
 
-class AppViewModel(
+class AppVM(
     private val application: Application
 ) : ViewModel() {
     private val context: Context get() = application.applicationContext

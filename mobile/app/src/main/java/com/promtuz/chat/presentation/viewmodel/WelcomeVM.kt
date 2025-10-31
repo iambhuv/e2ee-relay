@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class WelcomeViewModel(
+class WelcomeVM(
     private val keyManager: KeyManager,
     private val core: Core,
     private val application: Application,
@@ -46,11 +46,6 @@ class WelcomeViewModel(
             WelcomeField.Status -> _uiState.value.copy(status = value as WelcomeStatus)
         }
     }
-
-    init {
-        core.initLogger()
-    }
-
 
     /**
      * 1. Generating Key Pair

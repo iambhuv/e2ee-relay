@@ -3,7 +3,8 @@ package com.promtuz.chat
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import com.promtuz.chat.di.appModule
-import com.promtuz.chat.di.authModule
+import com.promtuz.chat.di.dbModule
+import com.promtuz.chat.di.vmModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -19,7 +20,8 @@ class Promtuz : Application() {
             androidContext(this@Promtuz)
             modules(
                 appModule,
-                authModule
+                dbModule,
+                vmModule
             )
         }
 

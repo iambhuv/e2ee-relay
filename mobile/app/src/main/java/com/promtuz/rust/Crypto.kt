@@ -2,6 +2,8 @@ package com.promtuz.rust
 
 import com.promtuz.chat.data.remote.dto.Bytes
 import kotlinx.serialization.Serializable
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 @Serializable
 data class EncryptedData(
@@ -15,11 +17,15 @@ data class EncryptedData(
     }
 }
 
-class Crypto(private val core: Core) {
+class Crypto : KoinComponent {
+    init {
+        // Forces Dependency on Core
+        inject<Core>()
+    }
+
     /**
      * returns the pointer to `EphemeralSecret Key` and `Ephemeral Public Key Bytes`
      */
-
     external fun getEphemeralKeypair(): Pair<Long, ByteArray>
 
 

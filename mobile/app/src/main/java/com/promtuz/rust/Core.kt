@@ -1,5 +1,10 @@
 package com.promtuz.rust
 
+/**
+ * TODO:
+ *  - Rename `com.promtuz.rust` to `com.promtuz.core`
+ *  - Move [getStaticKeypair] to [Crypto]
+ */
 class Core {
     companion object {
         init {
@@ -7,6 +12,9 @@ class Core {
         }
     }
 
+    init {
+        initLogger()
+    }
 
     /**
      * returns `Pair(SecretKey, PublicKey)`

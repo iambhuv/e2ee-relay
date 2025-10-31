@@ -4,29 +4,20 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.promtuz.chat.presentation.viewmodel.AppViewModel
+import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.ui.screens.ChatScreen
 import com.promtuz.chat.ui.screens.HomeScreen
-import com.promtuz.chat.ui.screens.ShareIdentityScreen
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
@@ -52,7 +43,7 @@ object Route : NavKey {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppNavigation(
-    appViewModel: AppViewModel = koinViewModel()
+    appViewModel: AppVM = koinViewModel()
 ) {
     val activity = LocalActivity.current
     val navigator = appViewModel.navigator

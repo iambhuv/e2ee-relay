@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.core.content.edit
+import kotlinx.io.IOException
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -120,8 +121,10 @@ class KeyManager(context: Context) {
         return decryptWithKeystoreKey(cipher, iv)
     }
 
-    fun getPublicKey(): ByteArray? {
-        val pubKeyStr = prefs.getString(IDENTITY_PUBLIC, null) ?: return null
+
+    @Throws(IOException::class)
+    fun getPublicKey(): ByteArray {
+        val pubKeyStr = prefs.getString(IDENTITY_PUBLIC, null) ?: throw IOException("Public Key not found in KeyManager")
         return Base64.decode(pubKeyStr)
     }
 }

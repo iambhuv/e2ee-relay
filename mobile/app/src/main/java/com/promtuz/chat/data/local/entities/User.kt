@@ -13,4 +13,3 @@ data class User(
     @PrimaryKey val key: List<Byte>,
     @ColumnInfo(name = "nickname") val nickname: String?
 )
-

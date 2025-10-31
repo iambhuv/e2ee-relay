@@ -38,7 +38,7 @@ import com.promtuz.chat.R
 import com.promtuz.chat.di.authModule
 import com.promtuz.chat.presentation.state.WelcomeField
 import com.promtuz.chat.presentation.state.WelcomeStatus
-import com.promtuz.chat.presentation.viewmodel.WelcomeViewModel
+import com.promtuz.chat.presentation.viewmodel.WelcomeVM
 import com.promtuz.chat.ui.activities.App
 import com.promtuz.chat.ui.components.OutlinedFormElements
 import com.promtuz.chat.ui.constants.Buttonimations
@@ -52,7 +52,7 @@ import org.koin.compose.KoinApplicationPreview
 @Composable
 fun WelcomeScreen(
     modifier: Modifier = Modifier,
-    welcomeViewModel: WelcomeViewModel = koinViewModel()
+    welcomeViewModel: WelcomeVM = koinViewModel()
 ) {
 
     val context = LocalContext.current

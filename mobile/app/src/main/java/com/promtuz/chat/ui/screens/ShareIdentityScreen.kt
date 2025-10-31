@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
@@ -23,13 +25,14 @@ import androidx.compose.ui.res.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
+import com.promtuz.chat.data.local.entities.User
+import com.promtuz.chat.data.repository.UserRepository
 import com.promtuz.chat.domain.model.Identity
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.BackTopBar
 import com.promtuz.chat.ui.components.QrCode
-import com.promtuz.chat.ui.text.avgSizeInStyle
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -37,12 +40,22 @@ import org.koin.compose.koinInject
 @Composable
 fun ShareIdentityScreen(
     activity: ShareIdentity,
-    keyManager: KeyManager = koinInject()
+    keyManager: KeyManager = koinInject(),
+    userRepo: UserRepository = koinInject()
 ) {
+
     val theme = MaterialTheme
 
     val key = remember { keyManager.getPublicKey() }
-        ?: throw Exception("Identity Public Key Unavailable in Share Screen")
+
+    val data by produceState<User?>(initialValue = null) {
+        value = try {
+            userRepo.getCurrentUser()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
 
     val identity = Identity(key.asList())
 

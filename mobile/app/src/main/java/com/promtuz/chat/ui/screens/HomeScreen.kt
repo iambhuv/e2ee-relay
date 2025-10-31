@@ -23,7 +23,7 @@ import com.promtuz.chat.R
 import com.promtuz.chat.data.dummy.dummyChats
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.navigation.Route
-import com.promtuz.chat.presentation.viewmodel.AppViewModel
+import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.Avatar
@@ -38,7 +38,7 @@ import org.koin.compose.koinInject
 @Composable
 fun HomeScreen(
     keyManager: KeyManager = koinInject(),
-    appViewModel: AppViewModel = koinViewModel()
+    appViewModel: AppVM = koinViewModel()
 ) {
     val context = LocalContext.current
     val direction = LocalLayoutDirection.current
