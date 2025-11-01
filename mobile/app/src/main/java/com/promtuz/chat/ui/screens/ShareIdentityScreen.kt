@@ -7,7 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -27,24 +26,29 @@ import org.koin.androidx.compose.koinViewModel
 fun ShareIdentityScreen(
     viewModel: ShareIdentityVM = koinViewModel()
 ) {
+    val context = LocalContext.current
     val publicIdentity by viewModel.publicIdentity.collectAsState()
     val captureController = rememberCaptureController()
-    val scope = rememberCoroutineScope()
 
     SimpleScreen("Share Identity Key") {
         Column(
             Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(48.dp, Alignment.CenterVertically)
         ) {
-            publicIdentity?.let {
-                QrCode(
-                    it.toByteArray(),
-                    Modifier
-                        .fillMaxWidth()
-                        .capturable(captureController)
-                        .align(Alignment.CenterHorizontally)
-                        .aspectRatio(1f)
-                )
+            Box(
+                Modifier
+                    .wrapContentSize()
+                    .align(Alignment.CenterHorizontally)
+                    .capturable(captureController)
+            ) {
+                publicIdentity?.let {
+                    QrCode(
+                        it.toByteArray(),
+                        Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                    )
+                }
             }
             Column(
                 Modifier.fillMaxWidth(),
@@ -52,7 +56,7 @@ fun ShareIdentityScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ShareQRButton {
-                    viewModel.shareQrCode(captureController)
+                    viewModel.shareQrCode(captureController) { context.startActivity(it) }
                 }
                 ScanQRButton()
             }

@@ -9,5 +9,5 @@ import org.koin.dsl.module
 val vmModule = module {
     viewModel { WelcomeVM(get(), get(), get(), get()) }
     viewModel { AppVM(get()) }
-    viewModel { ShareIdentityVM(get(), get()) }
+    viewModel { ShareIdentityVM(get(), get(), get()) }
 }
