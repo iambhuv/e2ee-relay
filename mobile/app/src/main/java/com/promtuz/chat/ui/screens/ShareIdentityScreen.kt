@@ -1,119 +1,59 @@
-@file:androidx.annotation.OptIn(ExperimentalGetImage::class) @file:OptIn(
-    ExperimentalMaterial3ExpressiveApi::class
-)
-
 package com.promtuz.chat.ui.screens
 
 import android.content.Intent
 import androidx.camera.core.ExperimentalGetImage
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.data.repository.UserRepository
-import com.promtuz.chat.domain.model.Identity
 import com.promtuz.chat.presentation.viewmodel.ShareIdentityVM
-import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.QrScanner
-import com.promtuz.chat.ui.components.BackTopBar
 import com.promtuz.chat.ui.components.QrCode
+import com.promtuz.chat.ui.components.SimpleScreen
+import dev.shreyaspatil.capturable.capturable
+import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
-@androidx.annotation.OptIn(ExperimentalGetImage::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ShareIdentityScreen(
-    keyManager: KeyManager = koinInject(),
-    userRepo: UserRepository = koinInject(),
     viewModel: ShareIdentityVM = koinViewModel()
 ) {
+    val publicIdentity by viewModel.publicIdentity.collectAsState()
+    val captureController = rememberCaptureController()
+    val scope = rememberCoroutineScope()
 
-    val theme = MaterialTheme
-
-    val key = remember { keyManager.getPublicKey() }
-
-//    val data by produceState<User?>(initialValue = null) {
-//        value = try {
-//            userRepo.getCurrentUser()
-//        } catch (_: Exception) {
-//            null
-//        }
-//    }
-
-    val identity = Identity(key.asList())
-
-    Scaffold(
-        topBar = { BackTopBar("Share Identity Key") }) { innerPadding ->
+    SimpleScreen("Share Identity Key") {
         Column(
-            Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(theme.colorScheme.background),
+            Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(48.dp, Alignment.CenterVertically)
         ) {
-
-            QrCode(
-                identity.toByteArray(), Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .aspectRatio(1f)
-            )
-
-//            Column(
-//                Modifier
-//                    .fillMaxWidth(0.8f)
-//                    .align(Alignment.CenterHorizontally)
-//                    .clip(RoundedCornerShape(32.dp))
-//                    .background(theme.colorScheme.surfaceContainer)
-//                    .padding(32.dp), verticalArrangement = Arrangement.spacedBy(28.dp)
-//            ) {
-//
-////                Box(
-////                    Modifier
-////                        .fillMaxWidth()
-////                        .align(Alignment.CenterHorizontally)
-////                        .aspectRatio(1f)
-////                ) {
-//////                    LoadingIndicator(
-//////                        Modifier
-//////                            .fillMaxWidth(0.5f)
-//////                            .align(Alignment.Center)
-//////                            .aspectRatio(1f)
-//////                    )
-////                    QrCode(
-////                        identity.toByteArray(), Modifier
-////                            .fillMaxWidth()
-////                            .align(Alignment.Center)
-////                            .aspectRatio(1f)
-////                    )
-////                }
-////                QrCode(
-////                    identity.toByteArray(),
-////                    Modifier
-////                        .fillMaxWidth()
-////                        .align(Alignment.CenterHorizontally)
-////                        .aspectRatio(1f)
-////                )
-//
-//                // PublicKeyBytesHex(bytes)
-//            }
-
+            publicIdentity?.let {
+                QrCode(
+                    it.toByteArray(),
+                    Modifier
+                        .fillMaxWidth()
+                        .capturable(captureController)
+                        .align(Alignment.CenterHorizontally)
+                        .aspectRatio(1f)
+                )
+            }
             Column(
                 Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ShareQRButton()
+                ShareQRButton {
+                    viewModel.shareQrCode(captureController)
+                }
                 ScanQRButton()
             }
         }
@@ -122,9 +62,9 @@ fun ShareIdentityScreen(
 
 
 @Composable
-private fun ColumnScope.ShareQRButton(modifier: Modifier = Modifier) {
+private fun ColumnScope.ShareQRButton(modifier: Modifier = Modifier, onShare: () -> Unit) {
     Button(
-        {},
+        onShare,
         modifier = modifier
             .fillMaxWidth(0.8f)
             .align(Alignment.CenterHorizontally),
@@ -138,6 +78,7 @@ private fun ColumnScope.ShareQRButton(modifier: Modifier = Modifier) {
 }
 
 
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
 @Composable
 private fun ColumnScope.ScanQRButton(modifier: Modifier = Modifier) {
     val context = LocalContext.current

@@ -165,4 +165,6 @@ dependencies {
     implementation(libs.zxing.core)
 
     implementation(libs.timber)
+
+    implementation(libs.capturable)
 }
