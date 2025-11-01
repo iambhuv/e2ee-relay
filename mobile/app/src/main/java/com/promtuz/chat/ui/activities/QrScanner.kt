@@ -1,17 +1,14 @@
 package com.promtuz.chat.ui.activities
 
 import android.Manifest
-import android.app.Activity.RESULT_CANCELED
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
-import android.os.SystemClock
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.OptIn
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.Camera
@@ -29,7 +26,9 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import com.promtuz.chat.domain.model.Identity
 import com.promtuz.chat.presentation.state.PermissionState
+import com.promtuz.chat.presentation.viewmodel.QrScannerVM
 import com.promtuz.chat.ui.screens.QrScannerScreen
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import com.promtuz.chat.utils.common.OneEuroFilter2D
@@ -38,28 +37,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import timber.log.Timber
 import kotlin.math.max
 
-
-private const val QR_DETECT_THRESHOLD = 50L; // ms
-
-data class TrackedQr(val id: String, var size: Size, var rect: RectF, var lastSeen: Long)
-
-/**
- * TODO:
- *  This activity should scan all the qr's present on the camera view,
- *  validate them, all validated qr's should be parsed into parseable entities supported by app,
- *  parsed entities can be shown in the middle of the designated qr while tracking it,
- *  tracking the qr and identifying the entity with the qr on screen can be challenging,
- *  end product should look stunning though, people can instead of
- *  instantaneous scan decision, choose themself,
- *  so it would be sort of "AR", fallbacks should be made of course -
- *  for devices with less capable hardware
- *
- */
 @ExperimentalGetImage
 class QrScanner : AppCompatActivity() {
+    private val qrScannerVM: QrScannerVM by inject<QrScannerVM>()
+
     lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     lateinit var imageAnalysis: ImageAnalysis
     lateinit var barcodeScanner: BarcodeScanner
@@ -80,30 +65,8 @@ class QrScanner : AppCompatActivity() {
         }
     }
 
-    val trackedQrCodes = mutableListOf<TrackedQr>()
-
-    var isScanning = false
-
-    fun updateTrackedQrs(new: List<TrackedQr>) {
-        val now = SystemClock.elapsedRealtime()
-
-        new.forEach { qr ->
-            val existing = trackedQrCodes.find { it.id == qr.id }
-            if (existing != null) {
-                existing.rect = qr.rect
-                existing.size = qr.size
-                existing.lastSeen = now
-            } else {
-                trackedQrCodes.add(qr.copy(lastSeen = now))
-            }
-        }
-
-        trackedQrCodes.removeAll { now - it.lastSeen > QR_DETECT_THRESHOLD }
-    }
-
-    private val smoothers = mutableMapOf<String, OneEuroFilter2D>()
-
-    fun mapImageToView(
+    private val smootherMap = mutableMapOf<String, OneEuroFilter2D>()
+    private fun mapImageToView(
         id: String,
         rect: Rect,
         imageProxy: ImageProxy,
@@ -129,7 +92,7 @@ class QrScanner : AppCompatActivity() {
         val bottom = top + (rect.height() * scale)
 
         val map = RectF(left, top, right, bottom)
-        val smoother = smoothers.getOrPut(id) { OneEuroFilter2D() }
+        val smoother = smootherMap.getOrPut(id) { OneEuroFilter2D() }
         return smoother.filter(map)
     }
 
@@ -148,9 +111,6 @@ class QrScanner : AppCompatActivity() {
         }
     }
 
-    /**
-     * Should run only if have camera permission
-     */
     @RequiresPermission(Manifest.permission.CAMERA)
     fun initScanner() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -161,7 +121,6 @@ class QrScanner : AppCompatActivity() {
 
         val scannerOptions =
             BarcodeScannerOptions.Builder()
-                // why bother with anything else
                 .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
                 .setExecutor(ContextCompat.getMainExecutor(this))
                 .setZoomSuggestionOptions(
@@ -191,57 +150,38 @@ class QrScanner : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
 
         imageAnalysis.setAnalyzer(
-            ContextCompat.getMainExecutor(this), qrAnalyzer(this)
+            ContextCompat.getMainExecutor(this), qrAnalyzer()
         )
     }
-}
 
+    private var isScanning = false
 
-@OptIn(ExperimentalGetImage::class)
-fun qrAnalyzer(
-    activity: QrScanner
-) = ImageAnalysis.Analyzer { imageProxy ->
-    activity.isScanning.then { return@Analyzer imageProxy.close() }
-    activity.isScanning = true
+    /**
+     * FIXME:
+     *  Scanner is unaware of screen's rotation
+     */
+    private fun qrAnalyzer() = ImageAnalysis.Analyzer { imageProxy ->
+        isScanning.then { return@Analyzer imageProxy.close() }
+        isScanning = true
 
-    val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
+        val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
 
-    val (imgW, imgH) = if (imageProxy.imageInfo.rotationDegrees % 180 == 0) imageProxy.width to imageProxy.height
-    else imageProxy.height to imageProxy.width
+        barcodeScanner.process(inputImage).addOnSuccessListener { barcodes ->
+            for (barcode in barcodes) {
+                val bytes = barcode.rawBytes ?: continue
+                val identity = Identity.fromByteArray(bytes) ?: continue
 
-    activity.barcodeScanner.process(inputImage).addOnSuccessListener { barcodes ->
-        val trackedQrList = mutableListOf<TrackedQr>()
+                // TODO
+            }
+        }.addOnFailureListener { exception ->
+            Timber.tag("QrScanner").e(exception, "Scan Fail: ")
 
-        for (barcode in barcodes) {
-            val rect = barcode.boundingBox ?: continue
-
-            imageProxy.imageInfo.rotationDegrees - activity.display.rotation
-
-            val (vHeight, vWidth) = activity.viewSize.value
-            val id = barcode.rawValue ?: "${rect.centerX()}:${rect.centerY()}"
-            val mapped = activity.mapImageToView(id, rect, imageProxy)
-            val scaleX = vWidth / imgW.toFloat()
-            val scaleY = vHeight / imgH.toFloat()
-            val scale = max(scaleX, scaleY) * 0.75f
-            val qrWidth = rect.width() * scale
-            val qrHeight = rect.height() * scale
-
-            trackedQrList.add(
-                TrackedQr(
-                    id, Size(qrWidth, qrHeight), mapped, SystemClock.elapsedRealtime()
-                )
-            )
+            expectsResult.then {
+                setResult(RESULT_CANCELED, Intent().putExtra("exception", exception))
+            }
+        }.addOnCompleteListener {
+            imageProxy.close()
+            isScanning = false
         }
-
-        activity.updateTrackedQrs(trackedQrList)
-    }.addOnFailureListener { exception ->
-        Timber.tag("QrScanner").e(exception, "Scan Fail: ")
-
-        activity.expectsResult.then {
-            activity.setResult(RESULT_CANCELED, Intent().putExtra("exception", exception))
-        }
-    }.addOnCompleteListener {
-        imageProxy.close()
-        activity.isScanning = false
     }
 }

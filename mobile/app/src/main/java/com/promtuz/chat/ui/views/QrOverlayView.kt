@@ -7,18 +7,11 @@ import android.graphics.Path
 import android.view.View
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
-import com.promtuz.chat.ui.activities.QrScanner
 
 @OptIn(ExperimentalGetImage::class)
 class QrOverlayView(
     context: Context
 ) : View(context) {
-    /**
-     * `QrOverlayView` is always expected to be inside QrScannerActivity
-     */
-    private val activity: QrScanner
-        get() = context as QrScanner
-
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
     }
@@ -58,16 +51,6 @@ class QrOverlayView(
 
     override fun onDraw(canvas: android.graphics.Canvas) {
         super.onDraw(canvas)
-        val qrCodes = activity.trackedQrCodes
-
-        paint.strokeWidth = 4F
-        paint.color = Color.GREEN
-
-        for (qr in qrCodes) {
-            canvas.drawRoundRect(qr.rect, 20f, 20f, paint)
-        }
-
-        // Drawing Guide Corners
 
         paint.strokeWidth = guideWidth
         paint.color = guideColor

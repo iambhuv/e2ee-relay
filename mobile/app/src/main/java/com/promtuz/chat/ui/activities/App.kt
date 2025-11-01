@@ -16,7 +16,6 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import org.koin.android.ext.android.inject
 
 class App : AppCompatActivity() {
-    private val appViewModel: AppVM by inject<AppVM>()
     private val keyManager: KeyManager by inject<KeyManager>()
 
     @OptIn(

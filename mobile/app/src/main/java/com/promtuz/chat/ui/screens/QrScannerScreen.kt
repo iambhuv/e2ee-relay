@@ -29,6 +29,8 @@ import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.res.*
+import androidx.compose.ui.text.*
+import androidx.compose.ui.text.font.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
 import androidx.core.app.ActivityCompat
@@ -74,9 +76,26 @@ fun QrScannerScreen(activity: QrScanner) {
                     })
         }
 
-        Box(contentAlignment = Alignment.Center) {
-            if (cameraPermission != PermissionState.Granted) {
-                activity.requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+        if (cameraPermission != PermissionState.Granted) {
+            activity.requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+        } else {
+            Column(Modifier.align(BiasAlignment(0f, 0.8f))) {
+                Button({  }) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.i_user_add), "Add Contact"
+                        )
+                        Text(buildAnnotatedString {
+                            append("Add ")
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("Titan")
+                            }
+                        })
+                    }
+                }
             }
         }
 
