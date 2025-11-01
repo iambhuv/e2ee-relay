@@ -27,7 +27,7 @@ private const val QR_MAGIC_NUMBER: UInt = 0x0750545au
  */
 data class Identity(
     val key: List<Byte>,
-    val nickname: String = "",
+    val nickname: String? = "",
     val token: List<Byte>? = null,
 ) {
     init {
@@ -39,7 +39,7 @@ data class Identity(
      * Generates a QR Ready ByteArray
      */
     fun toByteArray(): ByteArray {
-        val nicknameBytes = nickname.toByteArray(Charsets.UTF_8)
+        val nicknameBytes = (nickname ?: "").toByteArray(Charsets.UTF_8)
         val minSize = if (token != null) MIN_SIZE_TOKEN else MIN_SIZE
         val bufferSize = minSize + nicknameBytes.size
 
@@ -95,7 +95,7 @@ data class Identity(
                         buffer.get(nicknameBytes)
                         String(nicknameBytes, Charsets.UTF_8)
                     } else {
-                        ""
+                        null
                     }
 
                     Identity(key.toList(), nickname, token?.toList())

@@ -2,8 +2,6 @@ package com.promtuz.chat.ui.activities
 
 import android.Manifest
 import android.content.Intent
-import android.graphics.Rect
-import android.graphics.RectF
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,10 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.Camera
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.geometry.*
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -27,74 +22,28 @@ import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.promtuz.chat.domain.model.Identity
-import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.presentation.viewmodel.QrScannerVM
 import com.promtuz.chat.ui.screens.QrScannerScreen
 import com.promtuz.chat.ui.theme.PromtuzTheme
-import com.promtuz.chat.utils.common.OneEuroFilter2D
 import com.promtuz.chat.utils.extensions.then
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import timber.log.Timber
-import kotlin.math.max
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @ExperimentalGetImage
 class QrScanner : AppCompatActivity() {
-    private val qrScannerVM: QrScannerVM by inject<QrScannerVM>()
+    private val viewModel: QrScannerVM by viewModel()
 
     lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    lateinit var imageAnalysis: ImageAnalysis
     lateinit var barcodeScanner: BarcodeScanner
     lateinit var camera: Camera
 
-    val isCameraAvailable = mutableStateOf(false)
-    val cameraPermissionState = mutableStateOf(PermissionState.NotRequested)
-    val cameraProviderState = mutableStateOf<ProcessCameraProvider?>(null)
-    val viewSize = mutableStateOf(Size.Zero)
-
     var requestPermissionLauncher: ActivityResultLauncher<String> = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            cameraPermissionState.value = PermissionState.Granted
-        } else {
-            cameraPermissionState.value = PermissionState.Denied
-        }
-    }
-
-    private val smootherMap = mutableMapOf<String, OneEuroFilter2D>()
-    private fun mapImageToView(
-        id: String,
-        rect: Rect,
-        imageProxy: ImageProxy,
-    ): RectF {
-        val (viewWidth, viewHeight) = viewSize.value
-        val rotation = imageProxy.imageInfo.rotationDegrees
-        val (imgW, imgH) = if (rotation % 180 == 0) imageProxy.width.toFloat() to imageProxy.height.toFloat()
-        else imageProxy.height.toFloat() to imageProxy.width.toFloat()
-
-        val scale = max(viewWidth / imgW, viewHeight / imgH)
-
-        val scaledImageWidth = imgW * scale
-        val scaledImageHeight = imgH * scale
-
-        // amount cropped on each side in *view* pixels, convert back to image-space by dividing by scale
-        val xOffsetImageSpace = ((scaledImageWidth - viewWidth) / 2f).coerceAtLeast(0f) / scale
-        val yOffsetImageSpace = ((scaledImageHeight - viewHeight) / 2f).coerceAtLeast(0f) / scale
-
-        // map rect from image-space -> view-space (apply offset then scale)
-        val left = (rect.left - xOffsetImageSpace) * scale
-        val top = (rect.top - yOffsetImageSpace) * scale
-        val right = left + (rect.width() * scale)
-        val bottom = top + (rect.height() * scale)
-
-        val map = RectF(left, top, right, bottom)
-        val smoother = smootherMap.getOrPut(id) { OneEuroFilter2D() }
-        return smoother.filter(map)
-    }
+    ) { viewModel.handleCameraPermissionRequest(it) }
 
     val expectsResult: Boolean by lazy {
         callingActivity != null
@@ -106,18 +55,15 @@ class QrScanner : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             PromtuzTheme {
-                QrScannerScreen(this)
+                QrScannerScreen(this, viewModel)
             }
         }
     }
 
     @RequiresPermission(Manifest.permission.CAMERA)
     fun initScanner() {
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
-        imageAnalysis = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         val scannerOptions =
             BarcodeScannerOptions.Builder()
@@ -144,12 +90,11 @@ class QrScanner : AppCompatActivity() {
 
         barcodeScanner = BarcodeScanning.getClient(scannerOptions)
 
-
         cameraProviderFuture.addListener({
-            cameraProviderState.value = cameraProviderFuture.get()
+            viewModel.setCameraProvider(cameraProviderFuture.get())
         }, ContextCompat.getMainExecutor(this))
 
-        imageAnalysis.setAnalyzer(
+        viewModel.imageAnalysis.setAnalyzer(
             ContextCompat.getMainExecutor(this), qrAnalyzer()
         )
     }
@@ -167,12 +112,13 @@ class QrScanner : AppCompatActivity() {
         val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
 
         barcodeScanner.process(inputImage).addOnSuccessListener { barcodes ->
+            val localIdentities = mutableSetOf<Identity>()
             for (barcode in barcodes) {
                 val bytes = barcode.rawBytes ?: continue
                 val identity = Identity.fromByteArray(bytes) ?: continue
-
-                // TODO
+                localIdentities.add(identity)
             }
+            viewModel.refreshIdentities(localIdentities)
         }.addOnFailureListener { exception ->
             Timber.tag("QrScanner").e(exception, "Scan Fail: ")
 

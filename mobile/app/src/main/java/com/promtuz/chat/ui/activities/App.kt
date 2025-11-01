@@ -5,11 +5,9 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.material3.*
+import androidx.compose.ui.graphics.*
 import com.promtuz.chat.navigation.AppNavigation
-import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
