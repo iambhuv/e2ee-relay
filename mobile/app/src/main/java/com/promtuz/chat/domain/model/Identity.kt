@@ -32,7 +32,7 @@ data class Identity(
 ) {
     init {
         require(key.size == 32) { "Identity Public Key must be 32 bytes" }
-        require(token != null && token.size == 32) { "Agreement Token must be 32 bytes" }
+        require(token == null || token.size == 32) { "Agreement Token must be 32 bytes" }
     }
 
     /**

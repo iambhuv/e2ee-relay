@@ -12,20 +12,15 @@ import com.promtuz.chat.R
 import com.promtuz.chat.ui.text.avgSizeInStyle
 
 
-/**
- * Only works inside AppActivity
- */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BackTopBar(
-    title: String,
-    // appViewModel: AppViewModel = koinViewModel(),
+    title: String
 ) {
     val textTheme = MaterialTheme.typography
     val backHandler = LocalOnBackPressedDispatcherOwner.current
 
-
-    TopAppBar(
+    CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
             IconButton({

@@ -1,43 +1,101 @@
 package com.promtuz.chat.ui.components
 
-import android.graphics.Color
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.set
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
+import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.viewinterop.*
+import androidx.core.view.doOnLayout
+import com.promtuz.chat.domain.model.Identity
+import com.promtuz.chat.ui.theme.LocalTheme
+import com.promtuz.chat.ui.theme.PromtuzTheme
+import com.promtuz.chat.ui.theme.ThemeMode
+import com.promtuz.chat.ui.views.QrView
+import com.promtuz.chat.utils.extensions.then
+import kotlin.random.Random
 
 @Composable
 fun QrCode(
     data: ByteArray,
     modifier: Modifier = Modifier
 ) {
-    val writer = QRCodeWriter()
+    val colors = MaterialTheme.colorScheme
+    val containerColor = colors.surfaceContainer
+    val modulesColor = colors.onSurface
 
-    val hints = mapOf(
-        EncodeHintType.CHARACTER_SET to "ISO-8859-1",
-        EncodeHintType.MARGIN to 3
-    )
-    val qr =
-        writer.encode(data.toString(Charsets.ISO_8859_1), BarcodeFormat.QR_CODE, 500, 500, hints)
+    var isLoading by remember { mutableStateOf(true) }
 
+    val qrAlpha by animateFloatAsState(if (isLoading) 0f else 1f, label = "qr_alpha")
 
-    val bmp = createBitmap(qr.width, qr.height)
-
-    for (x in 0..<qr.width) {
-        for (y in 0..<qr.height) {
-            bmp[x, y] = if (qr.get(x, y)) Color.BLACK else Color.WHITE
+    Box(
+        Modifier
+            .padding(32.dp)
+            .clip(RoundedCornerShape(16))
+            .background(containerColor)
+    ) {
+        AnimatedContent(isLoading, Modifier.align(Alignment.Center)) {
+            it.then {
+                LoadingIndicator(
+                    Modifier
+                        .fillMaxWidth(0.5f)
+                        .align(Alignment.Center)
+                        .aspectRatio(1f)
+                )
+            }
         }
-    }
 
-    Box(modifier
-        .fillMaxWidth()
-        .aspectRatio(1f)) {
-        Image(bitmap = bmp.asImageBitmap(), "Identity Public QR Code", Modifier.fillMaxSize())
+        AndroidView(
+            { context ->
+                QrView(context).apply {
+                    setOnQrGeneratedListener {
+                        isLoading = false
+                    }
+                }
+            },
+            modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .graphicsLayer {
+                    alpha = qrAlpha
+                },
+            { view ->
+                view.setContent(data)
+                view.doOnLayout {
+                    view.setSize(view.width)
+                    view.setColor(modulesColor.toArgb())
+                }
+            })
+    }
+}
+
+
+@Preview
+@Composable
+fun QrCodePreview() {
+    PromtuzTheme(false) {
+        val publicKey = remember { ByteArray(32).also { Random.nextBytes(it) } }
+        val identity = Identity(publicKey.toList(), nickname = "Bhuvnesh")
+
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            QrCode(identity.toByteArray())
+        }
     }
 }

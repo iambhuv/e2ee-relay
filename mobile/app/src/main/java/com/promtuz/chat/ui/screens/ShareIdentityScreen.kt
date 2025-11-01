@@ -4,63 +4,56 @@
 
 package com.promtuz.chat.ui.screens
 
-import android.content.ClipData
 import android.content.Intent
-import android.widget.Toast
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.data.local.entities.User
 import com.promtuz.chat.data.repository.UserRepository
 import com.promtuz.chat.domain.model.Identity
+import com.promtuz.chat.presentation.viewmodel.ShareIdentityVM
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.QrScanner
-import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.BackTopBar
 import com.promtuz.chat.ui.components.QrCode
-import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 @Composable
 fun ShareIdentityScreen(
-    activity: ShareIdentity,
     keyManager: KeyManager = koinInject(),
-    userRepo: UserRepository = koinInject()
+    userRepo: UserRepository = koinInject(),
+    viewModel: ShareIdentityVM = koinViewModel()
 ) {
 
     val theme = MaterialTheme
 
     val key = remember { keyManager.getPublicKey() }
 
-    val data by produceState<User?>(initialValue = null) {
-        value = try {
-            userRepo.getCurrentUser()
-        } catch (_: Exception) {
-            null
-        }
-    }
-
+//    val data by produceState<User?>(initialValue = null) {
+//        value = try {
+//            userRepo.getCurrentUser()
+//        } catch (_: Exception) {
+//            null
+//        }
+//    }
 
     val identity = Identity(key.asList())
 
     Scaffold(
-        topBar = { TopBar() }) { innerPadding ->
+        topBar = { BackTopBar("Share Identity Key") }) { innerPadding ->
         Column(
             Modifier
                 .fillMaxSize()
@@ -69,24 +62,51 @@ fun ShareIdentityScreen(
             verticalArrangement = Arrangement.spacedBy(48.dp, Alignment.CenterVertically)
         ) {
 
-            Column(
-                Modifier
-                    .fillMaxWidth(0.8f)
+            QrCode(
+                identity.toByteArray(), Modifier
+                    .fillMaxWidth()
                     .align(Alignment.CenterHorizontally)
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(theme.colorScheme.surfaceContainer)
-                    .padding(32.dp), verticalArrangement = Arrangement.spacedBy(28.dp)
-            ) {
-                QrCode(
-                    identity.toByteArray(),
-                    Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                        .aspectRatio(1f)
-                )
+                    .aspectRatio(1f)
+            )
 
-                // PublicKeyBytesHex(bytes)
-            }
+//            Column(
+//                Modifier
+//                    .fillMaxWidth(0.8f)
+//                    .align(Alignment.CenterHorizontally)
+//                    .clip(RoundedCornerShape(32.dp))
+//                    .background(theme.colorScheme.surfaceContainer)
+//                    .padding(32.dp), verticalArrangement = Arrangement.spacedBy(28.dp)
+//            ) {
+//
+////                Box(
+////                    Modifier
+////                        .fillMaxWidth()
+////                        .align(Alignment.CenterHorizontally)
+////                        .aspectRatio(1f)
+////                ) {
+//////                    LoadingIndicator(
+//////                        Modifier
+//////                            .fillMaxWidth(0.5f)
+//////                            .align(Alignment.Center)
+//////                            .aspectRatio(1f)
+//////                    )
+////                    QrCode(
+////                        identity.toByteArray(), Modifier
+////                            .fillMaxWidth()
+////                            .align(Alignment.Center)
+////                            .aspectRatio(1f)
+////                    )
+////                }
+////                QrCode(
+////                    identity.toByteArray(),
+////                    Modifier
+////                        .fillMaxWidth()
+////                        .align(Alignment.CenterHorizontally)
+////                        .aspectRatio(1f)
+////                )
+//
+//                // PublicKeyBytesHex(bytes)
+//            }
 
             Column(
                 Modifier.fillMaxWidth(),
@@ -100,42 +120,6 @@ fun ShareIdentityScreen(
     }
 }
 
-
-@Composable
-private fun TopBar(modifier: Modifier = Modifier) {
-    val textTheme = MaterialTheme.typography
-
-    BackTopBar("Share Identity Key")
-}
-
-
-@Composable
-private fun PublicKeyBytesHex(bytes: ByteArray, modifier: Modifier = Modifier) {
-    val textTheme = MaterialTheme.typography
-    val context = LocalContext.current
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
-
-    Text(
-        bytes.toHexString(),
-        modifier = modifier
-            .fillMaxWidth()
-            .combinedClickable(onClick = {
-                scope.launch {
-                    val clipData = ClipData.newPlainText("Public Identity Key", bytes.toHexString())
-                    val clipEntry = ClipEntry(clipData)
-                    clipboard.setClipEntry(clipEntry)
-
-                    Toast.makeText(
-                        context, "Public Identity Key copied to clipboard", Toast.LENGTH_LONG
-                    ).show()
-                }
-            }),
-        textAlign = TextAlign.Center,
-        style = textTheme.bodyLargeEmphasized,
-        color = MaterialTheme.colorScheme.onBackground
-    )
-}
 
 @Composable
 private fun ColumnScope.ShareQRButton(modifier: Modifier = Modifier) {

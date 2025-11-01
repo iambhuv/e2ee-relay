@@ -3,11 +3,8 @@
 package com.promtuz.chat.ui.screens
 
 import android.Manifest
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
+import android.content.pm.PackageManager
 import android.util.Rational
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -22,17 +19,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.*
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
+import androidx.core.app.ActivityCompat
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.promtuz.chat.R
@@ -56,6 +55,16 @@ fun QrScannerScreen(activity: QrScanner) {
         val cameraPermission by activity.cameraPermissionState
         val cameraProvider by activity.cameraProviderState
 
+        LaunchedEffect(cameraPermission) {
+            if (ActivityCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                activity.initScanner()
+            }
+        }
+
         cameraProvider?.let {
             CameraPreview(
                 activity, it, Modifier
@@ -71,14 +80,16 @@ fun QrScannerScreen(activity: QrScanner) {
             }
         }
 
-        TopAppBar(
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
-            modifier = Modifier.background(Brush.verticalGradient(
-                listOf(
-                    androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f),
-                    androidx.compose.ui.graphics.Color.Transparent
+        CenterAlignedTopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            modifier = Modifier.background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color.Black.copy(alpha = 0.6f),
+                        Color.Transparent
+                    )
                 )
-            )),
+            ),
             navigationIcon = {
                 IconButton({
                     backHandler?.onBackPressedDispatcher?.onBackPressed()

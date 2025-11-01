@@ -22,7 +22,7 @@ class ShareIdentity : AppCompatActivity() {
 
         setContent {
             PromtuzTheme {
-                ShareIdentityScreen(this)
+                ShareIdentityScreen()
             }
         }
     }

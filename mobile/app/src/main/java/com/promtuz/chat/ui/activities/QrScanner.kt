@@ -1,17 +1,18 @@
 package com.promtuz.chat.ui.activities
 
+import android.Manifest
 import android.app.Activity.RESULT_CANCELED
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.Camera
 import androidx.camera.core.ExperimentalGetImage
@@ -38,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.security.Permission
 import kotlin.math.max
 
 
@@ -139,6 +141,19 @@ class QrScanner : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        enableEdgeToEdge()
+        setContent {
+            PromtuzTheme {
+                QrScannerScreen(this)
+            }
+        }
+    }
+
+    /**
+     * Should run only if have camera permission
+     */
+    @RequiresPermission(Manifest.permission.CAMERA)
+    fun initScanner() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         imageAnalysis = ImageAnalysis.Builder()
@@ -179,13 +194,6 @@ class QrScanner : AppCompatActivity() {
         imageAnalysis.setAnalyzer(
             ContextCompat.getMainExecutor(this), qrAnalyzer(this)
         )
-
-        enableEdgeToEdge()
-        setContent {
-            PromtuzTheme {
-                QrScannerScreen(this)
-            }
-        }
     }
 }
 
