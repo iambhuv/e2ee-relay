@@ -5,11 +5,11 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.view.View
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
-import androidx.core.graphics.createBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -20,24 +20,18 @@ import kotlinx.coroutines.withContext
 
 class QrView(context: Context) : View(context) {
     private var content = ByteArray(0)
-    private var size = 5
+    private var size = 512
     private val writer = QRCodeWriter()
-    private var color = Color.RED
+    private var color = Color.BLACK
     private var cachedBitmap: Bitmap? = null
     private var onQrGenerated: (() -> Unit)? = null
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var generationJob: Job? = null
 
     private val hints = mapOf(
         EncodeHintType.CHARACTER_SET to "ISO-8859-1",
-        EncodeHintType.MARGIN to 5
+        EncodeHintType.MARGIN to 0
     )
-
-    private val paint = Paint().apply {
-        isAntiAlias = true
-        isFilterBitmap = true
-    }
-
-    private var generationJob: Job? = null
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     fun setOnQrGeneratedListener(listener: () -> Unit) {
         onQrGenerated = listener
@@ -71,30 +65,27 @@ class QrView(context: Context) : View(context) {
                 hints
             )
 
-            val matrixWidth = bitMatrix.width
-            val matrixHeight = bitMatrix.height
+            val matrixSize = bitMatrix.width
+            val cellSize = size.toFloat() / matrixSize
 
-            val bitmap = createBitmap(matrixWidth, matrixHeight)
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
 
-            val modulePaint = Paint().apply {
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = this@QrView.color
-                isAntiAlias = true
                 style = Paint.Style.FILL
             }
 
-            val moduleSize = 1f
+            val radius = cellSize * 0.35f
 
-            for (y in 0 until matrixHeight) {
-                for (x in 0 until matrixWidth) {
+            for (y in 0 until matrixSize) {
+                for (x in 0 until matrixSize) {
                     if (bitMatrix[x, y]) {
-                        canvas.drawRect(
-                            x * moduleSize,
-                            y * moduleSize,
-                            (x + 1) * moduleSize,
-                            (y + 1) * moduleSize,
-                            modulePaint
-                        )
+                        val left = x * cellSize
+                        val top = y * cellSize
+                        val right = left + cellSize
+                        val bottom = top + cellSize
+                        canvas.drawRoundRect(left, top, right, bottom, radius, radius, paint)
                     }
                 }
             }
@@ -110,7 +101,7 @@ class QrView(context: Context) : View(context) {
 
     override fun onDraw(canvas: Canvas) {
         cachedBitmap?.let { bitmap ->
-            canvas.drawBitmap(bitmap, 0f, 0f, paint)
+            canvas.drawBitmap(bitmap, 0f, 0f, null)
         }
     }
 

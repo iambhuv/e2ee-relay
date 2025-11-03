@@ -33,8 +33,8 @@ fun QrCode(
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
-    val containerColor = colors.surfaceContainer
-    val modulesColor = colors.onSurface
+    val containerColor = colors.primaryFixed
+    val modulesColor = colors.background
 
     var isLoading by remember { mutableStateOf(true) }
 
@@ -42,8 +42,8 @@ fun QrCode(
 
     Box(
         Modifier
-            .padding(32.dp)
-            .clip(RoundedCornerShape(16))
+            .padding(48.dp)
+            .clip(RoundedCornerShape(12))
             .background(containerColor)
     ) {
         AnimatedContent(isLoading, Modifier.align(Alignment.Center)) {
@@ -52,7 +52,8 @@ fun QrCode(
                     Modifier
                         .fillMaxWidth(0.5f)
                         .align(Alignment.Center)
-                        .aspectRatio(1f)
+                        .aspectRatio(1f),
+                    color = modulesColor
                 )
             }
         }
@@ -67,6 +68,7 @@ fun QrCode(
             },
             modifier
                 .fillMaxWidth()
+                .padding(32.dp)
                 .aspectRatio(1f)
                 .graphicsLayer {
                     alpha = qrAlpha
