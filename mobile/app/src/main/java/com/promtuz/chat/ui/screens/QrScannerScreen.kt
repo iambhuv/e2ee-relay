@@ -3,7 +3,10 @@
 package com.promtuz.chat.ui.screens
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import android.util.Rational
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -28,23 +31,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
 import androidx.core.app.ActivityCompat
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.promtuz.chat.R
-import com.promtuz.chat.domain.model.Identity
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.presentation.viewmodel.QrScannerVM
+import com.promtuz.chat.presentation.viewmodel.UserIdentity
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.ui.views.QrOverlayView
-import com.promtuz.chat.utils.extensions.then
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -65,18 +69,42 @@ fun QrScannerScreen(
         val cameraPermission by viewModel.cameraPermissionState.collectAsState()
         val cameraProvider by viewModel.cameraProviderState.collectAsState()
         val identities by viewModel.identities.collectAsState()
+        val identitiesBeingSaved by viewModel.identitiesBeingSaved.collectAsState()
 
-        (cameraPermission != PermissionState.Granted).then {
-            activity.requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
+        when (cameraPermission) {
+            PermissionState.NotRequested -> {
+                activity.requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
 
-        LaunchedEffect(cameraPermission) {
-            if (ActivityCompat.checkSelfPermission(
-                    activity,
-                    Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                activity.initScanner()
+            PermissionState.Denied -> {
+                Column(
+                    Modifier
+                        .padding(32.dp)
+                        .align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "Camera permission denied. Enable it in Settings to scan QR",
+                        style = MaterialTheme.typography.titleLargeEmphasized,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Button({
+                        activity.startActivity(
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                setData(Uri.fromParts("package", activity.packageName, null))
+                            }
+                        )
+                    }) {
+                        Text("Open Settings")
+                    }
+                }
+            }
+
+            PermissionState.Granted -> {
+                activity.checkAndInitialize()
             }
         }
 
@@ -87,9 +115,16 @@ fun QrScannerScreen(
             )
         }
 
-        LazyColumn(Modifier.align(BiasAlignment(0f, 0.65f))) {
-            items(identities, { identity -> identity.key.toByteArray().toHexString() }) {
-                IdentityActionButton(it, Modifier.animateItem())
+        LazyColumn(Modifier.align(BiasAlignment(0f, 0.65f)), horizontalAlignment = Alignment.CenterHorizontally) {
+            items(identities, { identity -> identity.key }) {
+                IdentityActionButton(
+                    it,
+                    viewModel,
+                    identitiesBeingSaved.contains(it),
+                    Modifier.animateItem(
+                        fadeInSpec = null
+                    )
+                )
             }
         }
 
@@ -200,16 +235,27 @@ private fun CameraPreview(
 
 
 @Composable
-private fun IdentityActionButton(identity: Identity, modifier: Modifier = Modifier) {
-    Button({ }, modifier) {
-        val name = identity.nickname.let { if (it.isNullOrBlank()) "Anonymous" else it }
+private fun IdentityActionButton(
+    userIdentity: UserIdentity,
+    vm: QrScannerVM,
+    saving: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val user = userIdentity.user
+    val identity = userIdentity.identity
+    val isNew = user.isNew
+    val name = identity.nickname.let { if (it.isNullOrBlank()) "Anonymous" else it }
 
+    Button({
+        vm.saveUserIdentity(userIdentity)
+    }, modifier, enabled = isNew) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                painter = painterResource(R.drawable.i_user_add), "Add Contact"
+                painter = if (isNew) painterResource(R.drawable.i_user_add) else painterResource(R.drawable.i_user_check),
+                if (isNew) "Add Contact" else "Contact Saved"
             )
             Text(buildAnnotatedString {
                 append("Add ")

@@ -3,7 +3,10 @@ package com.promtuz.chat.ui.theme
 import androidx.compose.material3.*
 import androidx.compose.ui.graphics.*
 
-
+/**
+ * TODO:
+ *  Update colors based on background
+ */
 val primaryColors = ColorScheme(
     background = Color(0xFF111418),
     error = Color(0xFFF2B8B5),

@@ -89,7 +89,7 @@ fun QrCode(
 fun QrCodePreview() {
     PromtuzTheme(false) {
         val publicKey = remember { ByteArray(32).also { Random.nextBytes(it) } }
-        val identity = Identity(publicKey.toList(), nickname = "Bhuvnesh")
+        val identity = Identity(publicKey, nickname = "Bhuvnesh")
 
         Box(
             Modifier

@@ -2,7 +2,10 @@ package com.promtuz.chat.ui.activities
 
 import android.Manifest
 import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -13,6 +16,7 @@ import androidx.camera.core.Camera
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -21,7 +25,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import com.promtuz.chat.domain.model.Identity
 import com.promtuz.chat.presentation.viewmodel.QrScannerVM
 import com.promtuz.chat.ui.screens.QrScannerScreen
 import com.promtuz.chat.ui.theme.PromtuzTheme
@@ -30,8 +33,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import timber.log.Timber
+import java.util.concurrent.Executor
+
+private const val INVALID_TIME = -1L
 
 @ExperimentalGetImage
 class QrScanner : AppCompatActivity() {
@@ -66,10 +72,8 @@ class QrScanner : AppCompatActivity() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         val scannerOptions =
-            BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-                .setExecutor(ContextCompat.getMainExecutor(this))
-                .setZoomSuggestionOptions(
+            BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .setExecutor(ContextCompat.getMainExecutor(this)).setZoomSuggestionOptions(
                     ZoomSuggestionOptions.Builder { suggestedZoom ->
                         val control = camera.cameraControl
                         val info = camera.cameraInfo
@@ -100,25 +104,27 @@ class QrScanner : AppCompatActivity() {
     }
 
     private var isScanning = false
+    private var scanInterval = 500L // milliseconds
+    private var lastScanTime: Long = INVALID_TIME // milliseconds
 
     /**
      * FIXME:
      *  Scanner is unaware of screen's rotation
      */
     private fun qrAnalyzer() = ImageAnalysis.Analyzer { imageProxy ->
-        isScanning.then { return@Analyzer imageProxy.close() }
+        val now = SystemClock.uptimeMillis()
+
+        if ((lastScanTime != INVALID_TIME && (now - lastScanTime < scanInterval)) || isScanning) {
+            return@Analyzer imageProxy.close()
+        }
+
         isScanning = true
 
         val inputImage = InputImage.fromMediaImage(imageProxy.image ?: return@Analyzer, 90)
 
         barcodeScanner.process(inputImage).addOnSuccessListener { barcodes ->
-            val localIdentities = mutableSetOf<Identity>()
-            for (barcode in barcodes) {
-                val bytes = barcode.rawBytes ?: continue
-                val identity = Identity.fromByteArray(bytes) ?: continue
-                localIdentities.add(identity)
-            }
-            viewModel.refreshIdentities(localIdentities)
+            lastScanTime = SystemClock.uptimeMillis()
+            viewModel.handleScannedBarcodes(barcodes)
         }.addOnFailureListener { exception ->
             Timber.tag("QrScanner").e(exception, "Scan Fail: ")
 
@@ -128,6 +134,25 @@ class QrScanner : AppCompatActivity() {
         }.addOnCompleteListener {
             imageProxy.close()
             isScanning = false
+        }
+    }
+
+    fun handleReceiveCallback() {
+
+    }
+
+    /**
+     * TODO:
+     *  After granting permission manually from settings,
+     *  UI doesn't detect change in permission.
+     */
+    fun checkAndInitialize() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            this.initScanner()
         }
     }
 }

@@ -62,7 +62,7 @@ class WelcomeVM(
         val (secret, public) = core.getStaticKeypair()
 
         CoroutineScope(Dispatchers.IO).launch {
-            users.insert(User(public.toList(), _uiState.value.nickname))
+            users.insert(User(public, _uiState.value.nickname))
         }
 
         // Step 2.

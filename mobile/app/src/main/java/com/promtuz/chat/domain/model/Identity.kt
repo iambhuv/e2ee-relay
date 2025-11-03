@@ -15,8 +15,9 @@ private const val QR_MAGIC_NUMBER: UInt = 0x0750545au
  *
  *  AgreementToken can be an array of 4 null bytes to indicate a non agreement qr
  *
- * |================ Byte Structure ================|
- * ┌────────┬──────┬──────────┬──────────────────────┐
+ * ┌───────────────┬────────────────┬────────────────┐
+ * ├───────────────┤ Byte Structure ├────────────────┤
+ * ├────────┬──────┼──────────┬─────┴────────────────┤
  * │ Offset │ Size │ Type     │ Description          │
  * ├────────┼──────┼──────────┼──────────────────────┤
  * │ 0x00   │ 4    │ uint32   │ Magic number         │
@@ -26,9 +27,9 @@ private const val QR_MAGIC_NUMBER: UInt = 0x0750545au
  * └────────┴──────┴──────────┴──────────────────────┘
  */
 data class Identity(
-    val key: List<Byte>,
+    val key: ByteArray,
     val nickname: String? = "",
-    val token: List<Byte>? = null,
+    val token: ByteArray? = null,
 ) {
     init {
         require(key.size == 32) { "Identity Public Key must be 32 bytes" }
@@ -43,13 +44,12 @@ data class Identity(
         val minSize = if (token != null) MIN_SIZE_TOKEN else MIN_SIZE
         val bufferSize = minSize + nicknameBytes.size
 
-        val buffer = ByteBuffer.allocate(bufferSize)
-            .order(ByteOrder.LITTLE_ENDIAN);
+        val buffer = ByteBuffer.allocate(bufferSize).order(ByteOrder.LITTLE_ENDIAN);
 
         buffer.putInt(QR_MAGIC_NUMBER.toInt())
-        buffer.put(this.key.toByteArray())
+        buffer.put(this.key)
 
-        buffer.put(token?.toByteArray() ?: ByteArray(4))
+        buffer.put(token ?: ByteArray(4))
 
         buffer.put(nicknameBytes)
 
@@ -73,8 +73,7 @@ data class Identity(
             return identityCache.getOrPut(bytes.contentHashCode()) {
                 (bytes.size < MIN_SIZE).then { return null }
 
-                val buffer = ByteBuffer.wrap(bytes)
-                    .order(ByteOrder.LITTLE_ENDIAN)
+                val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
 
                 try {
                     (buffer.getInt().toUInt() != QR_MAGIC_NUMBER).then { return null }
@@ -98,7 +97,7 @@ data class Identity(
                         null
                     }
 
-                    Identity(key.toList(), nickname, token?.toList())
+                    Identity(key, nickname, token)
                 } catch (_: Exception) {
                     null
                 }
@@ -113,4 +112,15 @@ data class Identity(
             return nullToken.all { byte -> byte.toInt() == 0x00 }
         }
     }
+
+    override fun equals(other: Any?) =
+        other is Identity &&
+                key.contentEquals(other.key) &&
+                nickname.contentEquals(other.nickname) &&
+                token.contentEquals(other.token)
+
+    override fun hashCode() =
+        31 * key.contentHashCode() +
+            (nickname.hashCode()) +
+            (token.contentHashCode())
 }

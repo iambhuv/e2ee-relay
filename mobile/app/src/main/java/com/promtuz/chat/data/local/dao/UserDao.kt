@@ -23,7 +23,7 @@ interface UserDao {
     suspend fun insert(user: User)
 
     @Query("SELECT * FROM user WHERE `key` = :key")
-    suspend fun get(key: List<Byte>): User
+    suspend fun get(key: ByteArray): User?
 
     @Update
     suspend fun update(user: User)
