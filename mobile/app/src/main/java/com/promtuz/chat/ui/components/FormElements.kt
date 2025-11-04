@@ -24,7 +24,6 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -44,7 +43,6 @@ import com.promtuz.chat.ui.constants.CHECKBOX
 import com.promtuz.chat.ui.constants.CORNER_RADIUS_RATIO
 import com.promtuz.chat.ui.constants.Tweens
 import com.promtuz.chat.ui.theme.PromtuzTheme
-import com.promtuz.chat.ui.theme.outlinedFormElementsColors
 
 object OutlinedFormElements {
     @Composable
@@ -68,7 +66,7 @@ object OutlinedFormElements {
         keyboardActions: KeyboardActions = KeyboardActions.Default,
         interactionSource: MutableInteractionSource? = null,
     ) {
-        val colors = outlinedFormElementsColors()
+        val colors = MaterialTheme.colorScheme
 
         OutlinedTextField(
             modifier = modifier
@@ -104,23 +102,23 @@ object OutlinedFormElements {
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             interactionSource = interactionSource,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedLabelColor = colors.focused.label,
-                focusedBorderColor = colors.focused.border,
-                focusedPlaceholderColor = colors.focused.placeholder,
-
-                unfocusedLabelColor = colors.unfocused.label,
-                unfocusedBorderColor = colors.unfocused.border,
-                unfocusedPlaceholderColor = colors.unfocused.placeholder,
-
-                errorLabelColor = colors.error.label,
-                errorBorderColor = colors.error.border,
-                errorPlaceholderColor = colors.error.placeholder,
-
-                disabledLabelColor = colors.disabled.label,
-                disabledBorderColor = colors.disabled.border,
-                disabledPlaceholderColor = colors.disabled.placeholder
-            ),
+//            colors = OutlinedTextFieldDefaults.colors(
+//                focusedLabelColor = colors.focused.label,
+//                focusedBorderColor = colors.focused.border,
+//                focusedPlaceholderColor = colors.focused.placeholder,
+//
+//                unfocusedLabelColor = colors.unfocused.label,
+//                unfocusedBorderColor = colors.unfocused.border,
+//                unfocusedPlaceholderColor = colors.unfocused.placeholder,
+//
+//                errorLabelColor = colors.error.label,
+//                errorBorderColor = colors.error.border,
+//                errorPlaceholderColor = colors.error.placeholder,
+//
+//                disabledLabelColor = colors.disabled.label,
+//                disabledBorderColor = colors.disabled.border,
+//                disabledPlaceholderColor = colors.disabled.placeholder
+//            ),
             shape = RoundedCornerShape(16.dp),
             singleLine = true
         )
@@ -134,15 +132,15 @@ object OutlinedFormElements {
         modifier: Modifier = Modifier,
         enabled: Boolean = true
     ) {
-        val colors = outlinedFormElementsColors()
+        val colors = MaterialTheme.colorScheme
 
         val borderColor by animateColorAsState(
-            if (checked) Color.Transparent else colors.unfocused.border,
+            if (checked) Color.Transparent else colors.onSurfaceVariant,
             Tweens.microInteraction()
         )
 
         val backgroundColor by animateColorAsState(
-            if (enabled) if (checked) MaterialTheme.colorScheme.primary else Color.Transparent else colors.disabled.border,
+            if (enabled) if (checked) MaterialTheme.colorScheme.primary else Color.Transparent else colors.onSurfaceVariant.copy(0.75f),
             Tweens.microInteraction()
         )
 

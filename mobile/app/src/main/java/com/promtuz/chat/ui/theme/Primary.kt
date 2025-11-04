@@ -5,59 +5,73 @@ import androidx.compose.ui.graphics.*
 
 /**
  * TODO:
- *  Update colors based on background
+ *  This shit is bad and inconsistent, fix it
+ *
+ *  Primary Theme Hue = 214
  */
 val primaryColors = ColorScheme(
     background = Color(0xFF111418),
+
     error = Color(0xFFF2B8B5),
-    errorContainer = Color(0xFF8C1D18),
-    inverseOnSurface = Color(0xFF1A1B20),
-    inversePrimary = Color(0xFF475D92),
-    inverseSurface = Color(0xFFFAF8FF),
-    outline = Color(0xFF8F9099),
-    outlineVariant = Color(0xFF44464F),
-    primary = Color(0xFFB0C6FF),
-    primaryContainer = Color(0xFF2F4578),
-    primaryFixed = Color(0xFFD9E2FF),
-    primaryFixedDim = Color(0xFFB0C6FF),
+    errorContainer = Color(0xFF601410),
+
+    inversePrimary = Color(0xFF9CBDE8),
+    inverseSurface = Color(0xFFE4E5EB),
+
+    outline = Color(0xFF5E6069),
+    outlineVariant = Color(0xFF3B3D45),
+
     scrim = Color(0xFF000000),
-    secondary = Color(0xFFC0C6DC),
-    secondaryContainer = Color(0xFF404659),
-    secondaryFixed = Color(0xFFDCE2F9),
-    secondaryFixedDim = Color(0xFFC0C6DC),
-    tertiary = Color(0xFFE0BBDD),
-    tertiaryContainer = Color(0xFF593D59),
-    tertiaryFixed = Color(0xFFFDD7FA),
-    tertiaryFixedDim = Color(0xFFE0BBDD),
+
+    primary = Color(0xFF5A91D8),
+    primaryContainer = Color(0xFF2C4669),
+    primaryFixed = Color(0xFFA2BBDC),
+    primaryFixedDim = Color(0xFF7DA0CF),
+
+    secondary = Color(0xFF5E91A1),
+    secondaryContainer = Color(0xFF23373F),
+    secondaryFixed = Color(0xFF30505A),
+    secondaryFixedDim = Color(0xFF1E343C),
+
+    tertiary = Color(0xFFB77A8D),
+    tertiaryContainer = Color(0xFF422731),
+    tertiaryFixed = Color(0xFF593743),
+    tertiaryFixedDim = Color(0xFF3A242E),
 
     // Surface Colors
-    surface = Color(0xFF121318),
-    surfaceBright = Color(0xFF38393F),
-    surfaceContainer = Color(0xFF1E1F25),
-    surfaceContainerHigh = Color(0xFF282A2F),
-    surfaceContainerHighest = Color(0xFF33343A),
-    surfaceContainerLow = Color(0xFF1A1B20),
-    surfaceContainerLowest = Color(0xFF0C0E13),
-    surfaceDim = Color(0xFF121318),
-    surfaceTint = Color(0xFFB0C6FF),
-    surfaceVariant = Color(0xFF44464F),
+    surface = Color(0xFF12151A),
+    surfaceBright = Color(0xFF2F323A),
+    surfaceContainer = Color(0xFF1C1E24),
+    surfaceContainerHigh = Color(0xFF24262C),
+    surfaceContainerHighest = Color(0xFF2D2F35),
+    surfaceContainerLow = Color(0xFF17191E),
+    surfaceContainerLowest = Color(0xFF0A0C10),
+    surfaceDim = Color(0xFF101214),
+    surfaceTint = Color(0xFF659ADF),
+    surfaceVariant = Color(0xFF3F424C),
 
     // Typographic Colors
-    onBackground = Color(0xFFE2E2E9),
-    onError = Color(0xFF601410),
-    onErrorContainer = Color(0xFFF9DEDC),
-    onPrimary = Color(0xFF152E60),
-    onPrimaryContainer = Color(0xFFD9E2FF),
-    onPrimaryFixed = Color(0xFF001945),
-    onPrimaryFixedVariant = Color(0xFF2F4578),
-    onSecondary = Color(0xFF2A3042),
-    onSecondaryContainer = Color(0xFFDCE2F9),
-    onSecondaryFixed = Color(0xFF151B2C),
-    onSecondaryFixedVariant = Color(0xFF404659),
-    onSurface = Color(0xFFE2E2E9),
-    onSurfaceVariant = Color(0xFFC5C6D0),
-    onTertiary = Color(0xFF412742),
-    onTertiaryContainer = Color(0xFFFDD7FA),
-    onTertiaryFixed = Color(0xFF2A122C),
-    onTertiaryFixedVariant = Color(0xFF593D59),
+    onBackground = Color(0xFFDFE5EC),
+
+    onError = Color(0xFFF9DEDC),
+    onErrorContainer = Color(0xFFFFB4AB),
+
+    onPrimary = Color(0xFF000714),
+    onPrimaryContainer = Color(0xFFBFD4F2),
+    onPrimaryFixed = Color(0xFFD9E5FF),
+    onPrimaryFixedVariant = Color(0xFFAEC7EE),
+
+    onSecondary = Color(0xFFE8F2F4),
+    onSecondaryContainer = Color(0xFFB9D6DE),
+    onSecondaryFixed = Color(0xFFD3E8EE),
+    onSecondaryFixedVariant = Color(0xFFA3C9D4),
+
+    onTertiary = Color(0xFFF4EAEC),
+    onTertiaryContainer = Color(0xFFDAB7C0),
+    onTertiaryFixed = Color(0xFFF2DCE2),
+    onTertiaryFixedVariant = Color(0xFFD0A6B0),
+
+    onSurface = Color(0xFFE4E5EB),
+    inverseOnSurface = Color(0xFF121418),
+    onSurfaceVariant = Color(0xFFB9BAC3),
 )

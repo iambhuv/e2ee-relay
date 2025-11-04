@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
-import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
@@ -33,6 +32,7 @@ fun SavedUsersScreen(modifier: Modifier = Modifier) {
 private fun TopBar(scrollBehavior: TopAppBarScrollBehavior) {
     val textTheme = MaterialTheme.typography
     val backHandler = LocalOnBackPressedDispatcherOwner.current
+    val colors = MaterialTheme.colorScheme
 
     LargeTopAppBar(
         title = {
@@ -48,11 +48,11 @@ private fun TopBar(scrollBehavior: TopAppBarScrollBehavior) {
                     painter = painterResource(R.drawable.i_back),
                     "Go Back",
                     Modifier.size(28.dp),
-                    MaterialTheme.colorScheme.onPrimaryContainer
+                    MaterialTheme.colorScheme.onSurface
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
         scrollBehavior = scrollBehavior
     )
 }

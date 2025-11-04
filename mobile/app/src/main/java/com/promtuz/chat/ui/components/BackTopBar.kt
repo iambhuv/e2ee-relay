@@ -30,7 +30,7 @@ fun BackTopBar(
                     painter = painterResource(R.drawable.i_back),
                     "Go Back",
                     Modifier.size(28.dp),
-                    MaterialTheme.colorScheme.onPrimaryContainer
+                    MaterialTheme.colorScheme.onSurface
                 )
             }
         }, title = {

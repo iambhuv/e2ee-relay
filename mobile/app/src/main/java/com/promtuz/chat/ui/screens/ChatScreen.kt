@@ -14,5 +14,4 @@ fun ChatScreen(userId: String, modifier: Modifier = Modifier) {
             Text("Chat with $userId")
         }
     }
-
 }

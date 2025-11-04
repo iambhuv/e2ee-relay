@@ -43,11 +43,11 @@ fun Avatar(
             .clickable(
                 enabled = true,
                 interactionSource = interactionSource,
-                indication = ripple(
-                    color = adjustLight(
-                        MaterialTheme.colorScheme.background, 0.3f
-                    )
-                ),
+//                indication = ripple(
+//                    color = adjustLight(
+//                        MaterialTheme.colorScheme.background, 0.3f
+//                    )
+//                ),
             ) {
 
             }, contentAlignment = Alignment.Center

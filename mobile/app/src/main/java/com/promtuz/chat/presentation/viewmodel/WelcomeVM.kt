@@ -47,14 +47,6 @@ class WelcomeVM(
         }
     }
 
-    /**
-     * 1. Generating Key Pair
-     *    - Requires Native Core Lib
-     * 2. Storing Key Pair
-     * 3. Registration of Public Key
-     * 4. Connecting to Relay Server
-     * 5. Finish Welcome.
-     **/
     fun `continue`(onSuccess: () -> Unit) {
         onChange(WelcomeField.Status, WelcomeStatus.Generating)
 
