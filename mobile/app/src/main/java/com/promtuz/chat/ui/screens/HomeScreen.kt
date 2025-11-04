@@ -37,13 +37,13 @@ import com.promtuz.chat.utils.common.parseMessageDate
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinActivityViewModel
 import timber.log.Timber
 
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun HomeScreen(
-    keyManager: KeyManager = koinInject(),
-    appViewModel: AppVM = koinViewModel()
+    appViewModel: AppVM
 ) {
     val context = LocalContext.current
     val direction = LocalLayoutDirection.current
@@ -63,7 +63,7 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        drawerContent = { HomeDrawerContent() },
+        drawerContent = { HomeDrawerContent(appViewModel) },
     ) {
         Scaffold(topBar = { TopBar() }, floatingActionButton = {
             FloatingActionButton({

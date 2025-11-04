@@ -19,12 +19,11 @@ import com.promtuz.chat.ui.components.QrCode
 import com.promtuz.chat.ui.components.SimpleScreen
 import dev.shreyaspatil.capturable.capturable
 import dev.shreyaspatil.capturable.controller.rememberCaptureController
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ShareIdentityScreen(
-    viewModel: ShareIdentityVM = koinViewModel()
+    viewModel: ShareIdentityVM
 ) {
     val context = LocalContext.current
     val publicIdentity by viewModel.publicIdentity.collectAsState()

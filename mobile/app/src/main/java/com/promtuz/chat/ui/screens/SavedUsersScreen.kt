@@ -10,14 +10,17 @@ import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
+import com.promtuz.chat.presentation.viewmodel.SavedUsersVM
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SavedUsersScreen(modifier: Modifier = Modifier) {
+fun SavedUsersScreen(viewModel: SavedUsersVM = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
         topBar = { TopBar(scrollBehavior) }
     ) { padding ->
-        LazyColumn(modifier
+        LazyColumn(Modifier
             .padding(padding)
             .nestedScroll(scrollBehavior.nestedScrollConnection)) {
             items(100) {

@@ -38,12 +38,6 @@ class QrScannerVM(
     private val _identities = MutableStateFlow<List<UserIdentity>>(emptyList())
     val identities = _identities.asStateFlow()
 
-    /**
-     * List of identities which are currently in "Saving" state
-     * This is to prevent UI glitch when the user clicks on "Add Contact" but qr goes out of screen
-     *
-     * The reason it's StateFlow and not simple variable is so the ui can also display "Saving" state
-     */
     private val _identitiesBeingSaved = MutableStateFlow<List<UserIdentity>>(emptyList())
     val identitiesBeingSaved = _identitiesBeingSaved.asStateFlow()
 

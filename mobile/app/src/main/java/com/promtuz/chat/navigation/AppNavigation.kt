@@ -2,11 +2,9 @@ package com.promtuz.chat.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -19,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
 import androidx.compose.ui.window.*
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -29,7 +28,6 @@ import com.promtuz.chat.ui.screens.ChatScreen
 import com.promtuz.chat.ui.screens.HomeScreen
 import com.promtuz.chat.ui.screens.SavedUsersScreen
 import kotlinx.serialization.Serializable
-import org.koin.androidx.compose.koinViewModel
 
 
 object Route : NavKey {
@@ -57,7 +55,7 @@ object Route : NavKey {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppNavigation(
-    appViewModel: AppVM = koinViewModel()
+    appViewModel: AppVM
 ) {
     val activity = LocalActivity.current
     val navigator = appViewModel.navigator
@@ -76,10 +74,11 @@ fun AppNavigation(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background),
         entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator()
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
-            entry<Route.App> { HomeScreen() }
+            entry<Route.App> { HomeScreen(appViewModel) }
             entry<Route.ProfileScreen> { Text("Profile") }
             entry<Route.ChatScreen> { key -> ChatScreen(key.userId) }
             entry<Route.SavedUsersScreen>(

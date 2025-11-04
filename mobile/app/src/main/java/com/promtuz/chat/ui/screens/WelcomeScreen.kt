@@ -40,12 +40,10 @@ import com.promtuz.chat.ui.activities.App
 import com.promtuz.chat.ui.components.OutlinedFormElements
 import com.promtuz.chat.ui.constants.Buttonimations
 import com.promtuz.chat.ui.constants.Tweens
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun WelcomeScreen(
-    modifier: Modifier = Modifier,
-    welcomeViewModel: WelcomeVM = koinViewModel()
+    welcomeViewModel: WelcomeVM
 ) {
     val colors = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
@@ -57,7 +55,7 @@ fun WelcomeScreen(
     val focusManager = LocalFocusManager.current
 
     Box(
-        modifier
+        Modifier
             .fillMaxSize()
             .background(colors.background)
             .verticalScroll(rememberScrollState())

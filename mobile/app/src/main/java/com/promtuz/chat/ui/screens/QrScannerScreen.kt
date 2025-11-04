@@ -4,7 +4,6 @@ package com.promtuz.chat.ui.screens
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.util.Rational
@@ -24,32 +23,28 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.*
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
-import androidx.core.app.ActivityCompat
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.promtuz.chat.R
+import com.promtuz.chat.domain.model.UserIdentity
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.presentation.viewmodel.QrScannerVM
-import com.promtuz.chat.domain.model.UserIdentity
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.ui.views.QrOverlayView
-import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
@@ -111,11 +106,14 @@ fun QrScannerScreen(
         cameraProvider?.let {
             CameraPreview(
                 activity, it, Modifier
-                    .fillMaxSize()
+                    .fillMaxSize(), viewModel
             )
         }
 
-        LazyColumn(Modifier.align(BiasAlignment(0f, 0.65f)), horizontalAlignment = Alignment.CenterHorizontally) {
+        LazyColumn(
+            Modifier.align(BiasAlignment(0f, 0.65f)),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             items(identities, { identity -> identity.key }) {
                 IdentityActionButton(
                     it,
@@ -183,7 +181,7 @@ private fun CameraPreview(
     activity: QrScanner,
     cameraProvider: ProcessCameraProvider,
     modifier: Modifier,
-    viewModel: QrScannerVM = koinViewModel()
+    viewModel: QrScannerVM
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 

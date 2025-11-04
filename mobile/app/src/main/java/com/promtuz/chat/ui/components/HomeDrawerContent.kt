@@ -25,7 +25,7 @@ private data class DrawerButton(val label: String, val icon: Int, val onClick: (
 
 @Composable
 fun HomeDrawerContent(
-    viewModel: AppVM = koinViewModel()
+    viewModel: AppVM
 ) {
     val colors = MaterialTheme.colorScheme
     val textTheme = MaterialTheme.typography
