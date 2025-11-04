@@ -9,7 +9,7 @@ import androidx.room.PrimaryKey
 @Entity
 data class User(
     @PrimaryKey val key: ByteArray,
-    @ColumnInfo(name = "nickname") val nickname: String?,
+    @ColumnInfo(name = "nickname") val nickname: String = "",
 ) {
     @Ignore
     var isNew: Boolean = false

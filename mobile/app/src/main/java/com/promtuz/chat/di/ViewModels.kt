@@ -13,5 +13,5 @@ val vmModule = module {
     viewModel { AppVM(get()) }
     viewModel { ShareIdentityVM(get(), get(), get()) }
     viewModel { QrScannerVM(get(), get()) }
-    viewModel { SavedUsersVM(get()) }
+    viewModel { SavedUsersVM(get(), get()) }
 }

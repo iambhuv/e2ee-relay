@@ -40,6 +40,7 @@ import com.promtuz.chat.ui.activities.App
 import com.promtuz.chat.ui.components.OutlinedFormElements
 import com.promtuz.chat.ui.constants.Buttonimations
 import com.promtuz.chat.ui.constants.Tweens
+import com.promtuz.chat.utils.extensions.then
 
 @Composable
 fun WelcomeScreen(
@@ -124,10 +125,12 @@ fun WelcomeScreen(
             }
 
             Button(
-                {
-                    welcomeViewModel.`continue` {
-                        context.startActivity(Intent(context, App::class.java))
-                        (context as? Activity)?.finish()
+                onClick = {
+                    !isTryingToContinue.then {
+                        welcomeViewModel.`continue` {
+                            context.startActivity(Intent(context, App::class.java))
+                            (context as? Activity)?.finish()
+                        }
                     }
                 },
                 Modifier.fillMaxWidth(),

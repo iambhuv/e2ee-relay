@@ -32,7 +32,10 @@ fun Avatar(
     size: Dp = 52.dp,
     clip: Shape = RoundedCornerShape(size / AVATAR_RADIUS_RATIO)
 ) {
-    val fallbackChars = name.split(" ").map { split -> split[0] }.joinToString("")
+    val fallbackChars = name.split(" ")
+        .filter { it.isNotBlank() }
+        .map { it.first() }
+        .joinToString("")
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(

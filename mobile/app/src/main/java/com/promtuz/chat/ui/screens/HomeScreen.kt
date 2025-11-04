@@ -33,6 +33,7 @@ import com.promtuz.chat.ui.components.Avatar
 import com.promtuz.chat.ui.components.HomeDrawerContent
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
+import com.promtuz.chat.ui.util.groupedRoundShape
 import com.promtuz.chat.utils.common.parseMessageDate
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -93,27 +94,12 @@ fun HomeScreen(
                 }
 
                 itemsIndexed(dummyChats) { index, (name, msg) ->
-                    val (major, minor) = 32 to 15
-
-                    val clip = when {
-                        dummyChats.size == 1 -> RoundedCornerShape(major)
-                        index == 0 -> RoundedCornerShape(major, major, minor, minor)
-                        index == dummyChats.lastIndex -> RoundedCornerShape(
-                            minor,
-                            minor,
-                            major,
-                            major
-                        )
-
-                        else -> RoundedCornerShape(minor)
-                    }
-
                     val interactionSource = remember { MutableInteractionSource() }
 
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .clip(clip)
+                            .clip(groupedRoundShape(index, dummyChats.size))
                             .background(colors.surfaceContainer.copy(0.75f))
                             .combinedClickable(
                                 interactionSource = interactionSource,

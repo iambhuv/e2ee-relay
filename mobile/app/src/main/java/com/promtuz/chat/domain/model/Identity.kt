@@ -28,7 +28,7 @@ private const val QR_MAGIC_NUMBER: UInt = 0x0750545au
  */
 data class Identity(
     val key: ByteArray,
-    val nickname: String? = "",
+    val nickname: String = "",
     val token: ByteArray? = null,
 ) {
     init {
@@ -94,7 +94,7 @@ data class Identity(
                         buffer.get(nicknameBytes)
                         String(nicknameBytes, Charsets.UTF_8)
                     } else {
-                        null
+                        ""
                     }
 
                     Identity(key, nickname, token)

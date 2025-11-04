@@ -6,15 +6,16 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.promtuz.chat.data.local.entities.User
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM user")
-    suspend fun getAll(): List<User>
+    @Query("SELECT * FROM user ORDER BY nickname ASC")
+    fun getAll(): Flow<List<User>>
 
-    @Query("SELECT * FROM user WHERE nickname LIKE '%' || :nickname || '%'")
-    suspend fun getAll(nickname: String): List<User>
+    @Query("SELECT * FROM user WHERE nickname LIKE '%' || :nickname || '%' ORDER BY nickname ASC")
+    fun getAll(nickname: String): Flow<List<User>>
 
     @Insert
     suspend fun insert(vararg users: User)

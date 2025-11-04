@@ -53,10 +53,6 @@ class WelcomeVM(
         // Step 1.
         val (secret, public) = core.getStaticKeypair()
 
-        CoroutineScope(Dispatchers.IO).launch {
-            users.insert(User(public, _uiState.value.nickname))
-        }
-
         // Step 2.
         keyManager.storeSecretKey(secret) // secret is emptied
         keyManager.storePublicKey(public)
@@ -68,6 +64,9 @@ class WelcomeVM(
         viewModelScope.launch {
             quicClient.connect(context).onSuccess {
                 _uiState.value = _uiState.value.copy(status = WelcomeStatus.Success)
+                CoroutineScope(Dispatchers.IO).launch {
+                    users.insert(User(public, _uiState.value.nickname))
+                }
                 onSuccess()
             }.onFailure {
                 val errorText = when (val e = it) {
@@ -80,6 +79,7 @@ class WelcomeVM(
                 }
 
                 _uiState.value = _uiState.value.copy(errorText = errorText)
+                _uiState.value = _uiState.value.copy(status = WelcomeStatus.Normal)
             }
         }
     }

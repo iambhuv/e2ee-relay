@@ -18,6 +18,7 @@ import com.promtuz.chat.R
 import com.promtuz.chat.navigation.Route
 import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.ui.text.avgSizeInStyle
+import com.promtuz.chat.ui.util.groupedRoundShape
 import com.promtuz.chat.utils.extensions.then
 import org.koin.androidx.compose.koinViewModel
 
@@ -60,8 +61,6 @@ fun HomeDrawerContent(
                     .padding(vertical = 24.dp, horizontal = 12.dp)
             ) {
                 itemsIndexed(list) { outerIndex, items ->
-                    val (major, minor) = remember { 32 to 15 }
-
                     (outerIndex != 0).then {
                         Spacer(Modifier.padding(vertical = 8.dp))
                     }
@@ -70,25 +69,12 @@ fun HomeDrawerContent(
                         for (index in 0..(items.size - 1)) {
                             val (label, drawableIcon, onClick) = items[index]
 
-                            val clip = when {
-                                items.size == 1 -> RoundedCornerShape(major)
-                                index == 0 -> RoundedCornerShape(major, major, minor, minor)
-                                index == items.lastIndex -> RoundedCornerShape(
-                                    minor,
-                                    minor,
-                                    major,
-                                    major
-                                )
-
-                                else -> RoundedCornerShape(minor)
-                            }
-
                             val interactionSource = remember { MutableInteractionSource() }
 
                             Row(
                                 Modifier
                                     .fillMaxWidth()
-                                    .clip(clip)
+                                    .clip(groupedRoundShape(index, items.size))
                                     .background(colors.surfaceContainer)
                                     .combinedClickable(
                                         interactionSource = interactionSource,

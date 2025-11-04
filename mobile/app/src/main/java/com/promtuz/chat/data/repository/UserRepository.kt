@@ -4,9 +4,11 @@ import com.promtuz.chat.data.local.dao.UserDao
 import com.promtuz.chat.data.local.entities.User
 import com.promtuz.chat.domain.model.Identity
 import com.promtuz.chat.security.KeyManager
+import kotlinx.coroutines.flow.Flow
 
 class UserRepository(
-    private val users: UserDao, private val keyManager: KeyManager
+    private val users: UserDao,
+    private val keyManager: KeyManager
 ) {
 
     /**
@@ -28,5 +30,9 @@ class UserRepository(
         if (!user.isNew) throw IllegalStateException("Attempted to save a non-new user")
         users.insert(user)
         return users.get(user.key) ?: throw IllegalStateException("data must exist but doesn’t")
+    }
+
+    fun fetchAll(nickname: String = ""): Flow<List<User>> {
+        return if (nickname.isEmpty()) users.getAll() else users.getAll(nickname)
     }
 }
