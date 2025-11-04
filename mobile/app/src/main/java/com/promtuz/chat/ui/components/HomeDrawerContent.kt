@@ -105,7 +105,7 @@ fun HomeDrawerContent(
                                     painterResource(drawableIcon),
                                     label,
                                     Modifier.size(26.dp),
-                                    tint = colors.onPrimaryContainer
+                                    tint = colors.onSurface
                                 )
 
                                 Text(

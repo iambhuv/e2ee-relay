@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.promtuz.chat.data.repository.UserRepository
 import com.promtuz.chat.domain.model.Identity
+import com.promtuz.chat.domain.model.UserIdentity
 import com.promtuz.chat.presentation.state.PermissionState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

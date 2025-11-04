@@ -45,7 +45,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.promtuz.chat.R
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.presentation.viewmodel.QrScannerVM
-import com.promtuz.chat.presentation.viewmodel.UserIdentity
+import com.promtuz.chat.domain.model.UserIdentity
 import com.promtuz.chat.ui.activities.QrScanner
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.ui.views.QrOverlayView
