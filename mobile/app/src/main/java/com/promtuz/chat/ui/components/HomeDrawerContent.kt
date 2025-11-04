@@ -15,29 +15,36 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
+import com.promtuz.chat.navigation.Route
+import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.utils.extensions.then
+import org.koin.androidx.compose.koinViewModel
+
+private data class DrawerButton(val label: String, val icon: Int, val onClick: (() -> Unit)? = null)
 
 @Composable
-fun HomeDrawerContent(modifier: Modifier = Modifier) {
+fun HomeDrawerContent(
+    viewModel: AppVM = koinViewModel()
+) {
     val colors = MaterialTheme.colorScheme
     val textTheme = MaterialTheme.typography
 
     BoxWithConstraints {
         val maxWidth = maxWidth * 0.8f
 
-        val list = remember {
+        val list: List<List<DrawerButton>> = remember {
             listOf(
                 listOf(
-                    "My Profile" to R.drawable.i_profile
+                    DrawerButton("My Profile", R.drawable.i_profile)
                 ),
                 listOf(
-                    "Saved Users" to R.drawable.i_contacts,
-                    "Blocked Users" to R.drawable.i_user_blocked
+                    DrawerButton("Saved Users", R.drawable.i_contacts) { viewModel.goTo(Route.SavedUsersScreen) },
+                    DrawerButton("Blocked Users", R.drawable.i_user_blocked),
                 ),
                 listOf(
-                    "Settings" to R.drawable.oi_settings,
-                    "About" to R.drawable.oi_info
+                    DrawerButton("Settings", R.drawable.oi_settings),
+                    DrawerButton("About", R.drawable.oi_info),
                 )
             )
         }
@@ -61,7 +68,7 @@ fun HomeDrawerContent(modifier: Modifier = Modifier) {
 
                     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         for (index in 0..(items.size - 1)) {
-                            val (label, drawableIcon) = items[index]
+                            val (label, drawableIcon, onClick) = items[index]
 
                             val clip = when {
                                 items.size == 1 -> RoundedCornerShape(major)
@@ -87,7 +94,7 @@ fun HomeDrawerContent(modifier: Modifier = Modifier) {
                                         interactionSource = interactionSource,
                                         indication = ripple(color = colors.surfaceContainerHighest),
                                         onClick = {
-
+                                            onClick?.invoke()
                                         },
                                     )
                                     .padding(vertical = 12.dp, horizontal = 16.dp),
@@ -103,7 +110,10 @@ fun HomeDrawerContent(modifier: Modifier = Modifier) {
 
                                 Text(
                                     label,
-                                    style = avgSizeInStyle(textTheme.labelLargeEmphasized, textTheme.bodyLargeEmphasized),
+                                    style = avgSizeInStyle(
+                                        textTheme.labelLargeEmphasized,
+                                        textTheme.bodyLargeEmphasized
+                                    ),
                                     color = colors.onBackground
                                 )
                             }

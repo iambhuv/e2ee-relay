@@ -10,8 +10,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
@@ -19,6 +21,7 @@ import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.viewModelScope
 import com.promtuz.chat.R
 import com.promtuz.chat.data.dummy.dummyChats
 import com.promtuz.chat.data.remote.QuicClient
@@ -31,8 +34,10 @@ import com.promtuz.chat.ui.components.HomeDrawerContent
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import com.promtuz.chat.utils.common.parseMessageDate
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import timber.log.Timber
 
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
@@ -45,6 +50,16 @@ fun HomeScreen(
     val textTheme = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    LaunchedEffect(Unit) {
+        appViewModel.closeDrawer.collect {
+            drawerState.close()
+        }
+    }
+
+    LaunchedEffect(drawerState.currentOffset) {
+        Timber.tag("HomeDrawer").d("${drawerState.isAnimationRunning} ; ${drawerState.currentOffset}")
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
