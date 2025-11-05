@@ -11,6 +11,8 @@ fun FlexibleScreen(
     title: @Composable (() -> Unit),
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
+    topBarColors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+    topBarModifier: Modifier = Modifier,
     content: @Composable ((PaddingValues, TopAppBarScrollBehavior) -> Unit)
 ) {
     val colors = MaterialTheme.colorScheme
@@ -20,8 +22,9 @@ fun FlexibleScreen(
         topBar = {
             MediumFlexibleTopAppBar(
                 title = title,
+                modifier = topBarModifier,
                 navigationIcon = { GoBackButton() },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
+                colors = topBarColors,
                 scrollBehavior = scrollBehavior
             )
         },

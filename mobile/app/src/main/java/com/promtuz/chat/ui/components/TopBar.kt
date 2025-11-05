@@ -22,6 +22,7 @@ import com.promtuz.chat.R
 import com.promtuz.chat.data.remote.ConnectionStatus
 import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.ui.text.calSansfamily
+import com.promtuz.chat.ui.theme.gradientScrim
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -58,19 +59,7 @@ fun TopBar(quicClient: QuicClient = koinInject()) {
 
     TopAppBar(
         modifier = Modifier
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.65f),
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.2f),
-                        Color.Transparent
-                    )
-                )
-            )
+            .background(gradientScrim())
             .padding(horizontal = 16.dp),
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {

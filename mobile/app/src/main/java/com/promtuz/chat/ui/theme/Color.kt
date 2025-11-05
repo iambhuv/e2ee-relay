@@ -11,6 +11,26 @@ import androidx.compose.ui.unit.*
 import androidx.core.graphics.ColorUtils
 
 
+@Composable
+fun gradientScrim(base: Color = MaterialTheme.colorScheme.background) = Brush.verticalGradient(
+    listOf(
+        base.copy(alpha = 0.95f),
+        base.copy(alpha = 0.9f),
+        base.copy(alpha = 0.8f),
+        base.copy(alpha = 0.65f),
+        base.copy(alpha = 0.5f),
+        base.copy(alpha = 0.2f),
+        Color.Transparent
+    )
+)
+
+@Composable
+fun transparentTopAppBar() = TopAppBarDefaults.topAppBarColors(
+    containerColor = Color.Transparent,
+    scrolledContainerColor = Color.Transparent
+)
+
+
 /**
  *
  * 1f changeInLight is 100%

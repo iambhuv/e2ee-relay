@@ -71,7 +71,7 @@ val primaryColors = ColorScheme(
     onTertiaryFixed = Color(0xFFF2DCE2),
     onTertiaryFixedVariant = Color(0xFFD0A6B0),
 
-    onSurface = Color(0xFFE4E5EB),
+    onSurface = Color(0xFFd0d1d7),
     inverseOnSurface = Color(0xFF121418),
     onSurfaceVariant = Color(0xFFB9BAC3),
 )
