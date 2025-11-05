@@ -9,7 +9,6 @@ import android.provider.Settings
 import android.util.Rational
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.Preview
@@ -43,6 +42,7 @@ import com.promtuz.chat.domain.model.UserIdentity
 import com.promtuz.chat.presentation.state.PermissionState
 import com.promtuz.chat.presentation.viewmodel.QrScannerVM
 import com.promtuz.chat.ui.activities.QrScanner
+import com.promtuz.chat.ui.components.GoBackButton
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.ui.views.QrOverlayView
 
@@ -53,7 +53,6 @@ fun QrScannerScreen(
     viewModel: QrScannerVM
 ) {
     val textTheme = MaterialTheme.typography
-    val backHandler = LocalOnBackPressedDispatcherOwner.current
 
     var torchEnabled by remember { mutableStateOf(false) }
     val haveCamera by viewModel.isCameraAvailable.collectAsState()
@@ -136,18 +135,7 @@ fun QrScannerScreen(
                     )
                 )
             ),
-            navigationIcon = {
-                IconButton({
-                    backHandler?.onBackPressedDispatcher?.onBackPressed()
-                }) {
-                    Icon(
-                        painter = painterResource(R.drawable.i_back),
-                        "Go Back",
-                        Modifier.size(28.dp),
-                        MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }, title = {
+            navigationIcon = { GoBackButton() }, title = {
                 Text(
                     "Scan QR", style = avgSizeInStyle(
                         textTheme.titleLargeEmphasized, textTheme.titleMediumEmphasized

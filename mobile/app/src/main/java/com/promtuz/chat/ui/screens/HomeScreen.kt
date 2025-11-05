@@ -28,6 +28,7 @@ import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.Avatar
+import com.promtuz.chat.ui.components.DrawableIcon
 import com.promtuz.chat.ui.components.HomeDrawerContent
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
@@ -66,12 +67,7 @@ fun HomeScreen(
             FloatingActionButton({
                 context.startActivity(Intent(context, ShareIdentity::class.java))
             }) {
-                Icon(
-                    painter = painterResource(R.drawable.i_qr_code_scanner),
-                    "QR Code",
-                    Modifier,
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                DrawableIcon(R.drawable.i_qr_code_scanner, desc = "QR Code", tint = colors.onPrimaryContainer)
             }
         }) { innerPadding ->
             LazyColumn(
