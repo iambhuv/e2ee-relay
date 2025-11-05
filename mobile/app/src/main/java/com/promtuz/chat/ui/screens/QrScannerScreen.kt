@@ -230,7 +230,7 @@ private fun IdentityActionButton(
     val user = userIdentity.user
     val identity = userIdentity.identity
     val isNew = user.isNew
-    val name = identity.nickname.let { if (it.isNullOrBlank()) "Anonymous" else it }
+    val name = identity.nickname.ifBlank { "Anonymous" }
 
     Button({
         vm.saveUserIdentity(userIdentity)
@@ -239,10 +239,12 @@ private fun IdentityActionButton(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
+            if (saving) LoadingIndicator(Modifier.size(24.dp))
+            else Icon(
                 painter = if (isNew) painterResource(R.drawable.i_user_add) else painterResource(R.drawable.i_user_check),
                 if (isNew) "Add Contact" else "Contact Saved"
             )
+
             Text(buildAnnotatedString {
                 append("Add ")
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
