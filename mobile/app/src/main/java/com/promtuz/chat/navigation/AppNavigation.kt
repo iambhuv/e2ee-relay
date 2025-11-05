@@ -62,12 +62,6 @@ fun AppNavigation(
     val backStack = appViewModel.backStack
     val motionScheme = MaterialTheme.motionScheme
 
-    BackHandler(true) {
-        if (!navigator.back()) {
-            activity?.finish()
-        }
-    }
-
     NavDisplay(
         backStack,
         onBack = { backStack.removeLastOrNull() },
@@ -89,16 +83,14 @@ fun AppNavigation(
         },
         sizeTransform = SizeTransform(clip = false),
         transitionSpec = {
-            fadeIn(tween(300, easing = LinearOutSlowInEasing)) +
-                    slideInHorizontally { it / 5 } togetherWith
-                    fadeOut(tween(200, easing = FastOutLinearInEasing)) +
-                    slideOutHorizontally { -it / 10 }
+            fadeIn(tween(350, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 1.0f))) +
+                    slideInHorizontally(tween(500, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 1.0f))) { it / 4 } togetherWith
+                    fadeOut(tween(300, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 0.8f)))
         },
         popTransitionSpec = {
-            fadeIn(tween(250, easing = LinearOutSlowInEasing)) +
-                    slideInHorizontally { -it / 8 } togetherWith
-                    fadeOut(tween(400, easing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1.0f))) +
-                    slideOutHorizontally { it / 5 }
+            fadeIn(tween(300, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 0.8f))) togetherWith
+                    fadeOut(tween(350, easing = CubicBezierEasing(0.8f, 0.25f, 0.25f, 1.0f))) +
+                    slideOutHorizontally(tween(350, easing = CubicBezierEasing(0.5f, 0.12f, 0.12f, 0.9f))) { (it * 0.75f).toInt() }
         }
 
     )

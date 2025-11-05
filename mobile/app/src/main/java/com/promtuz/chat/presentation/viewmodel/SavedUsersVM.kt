@@ -36,7 +36,7 @@ class SavedUsersVM(
 
     val users: GroupedUserList =
         userRepository.fetchAll(_searchQuery.value)
-            .map { groupUsersFlow(it, UsersGroupMode.NONE) }
+            .map { groupUsersFlow(it, UsersGroupMode.BY_FIRST_LETTER) }
             .onEach { _isLoading.value = false }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyMap())
 

@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.unit.*
@@ -39,11 +40,12 @@ fun SavedUsersScreen(viewModel: SavedUsersVM = koinViewModel()) {
                     .fillMaxSize()
                     .padding(padding)
                     .padding(horizontal = 18.dp)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 for ((groupTitle, users) in userGroups) {
                     item {
-                        Text(groupTitle)
+                        Text(groupTitle, Modifier.padding(top = 10.dp, bottom = 6.dp))
                     }
                     itemsIndexed(users) { index, user ->
                         SavedUsersGroup(Modifier, index, user, users.size)
