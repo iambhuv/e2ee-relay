@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
@@ -21,11 +20,10 @@ import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import androidx.lifecycle.viewModelScope
 import com.promtuz.chat.R
 import com.promtuz.chat.data.dummy.dummyChats
 import com.promtuz.chat.data.remote.QuicClient
-import com.promtuz.chat.navigation.Route
+import com.promtuz.chat.navigation.Routes
 import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.security.KeyManager
 import com.promtuz.chat.ui.activities.ShareIdentity
@@ -35,10 +33,7 @@ import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import com.promtuz.chat.ui.util.groupedRoundShape
 import com.promtuz.chat.utils.common.parseMessageDate
-import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinActivityViewModel
 import timber.log.Timber
 
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
@@ -59,7 +54,8 @@ fun HomeScreen(
     }
 
     LaunchedEffect(drawerState.currentOffset) {
-        Timber.tag("HomeDrawer").d("${drawerState.isAnimationRunning} ; ${drawerState.currentOffset}")
+        Timber.tag("HomeDrawer")
+            .d("${drawerState.isAnimationRunning} ; ${drawerState.currentOffset}")
     }
 
     ModalNavigationDrawer(
@@ -105,7 +101,7 @@ fun HomeScreen(
                                 interactionSource = interactionSource,
                                 indication = ripple(color = colors.surfaceContainerHighest),
                                 onClick = {
-                                    appViewModel.navigator.chat(Route.ChatScreen(name))
+                                    appViewModel.navigator.chat(Routes.Chat(name))
                                 },
                                 onLongClick = {
 

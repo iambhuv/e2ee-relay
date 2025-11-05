@@ -6,7 +6,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -15,12 +14,11 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
-import com.promtuz.chat.navigation.Route
+import com.promtuz.chat.navigation.Routes
 import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.ui.util.groupedRoundShape
 import com.promtuz.chat.utils.extensions.then
-import org.koin.androidx.compose.koinViewModel
 
 private data class DrawerButton(val label: String, val icon: Int, val onClick: (() -> Unit)? = null)
 
@@ -40,7 +38,7 @@ fun HomeDrawerContent(
                     DrawerButton("My Profile", R.drawable.i_profile)
                 ),
                 listOf(
-                    DrawerButton("Saved Users", R.drawable.i_contacts) { viewModel.goTo(Route.SavedUsersScreen) },
+                    DrawerButton("Saved Users", R.drawable.i_contacts) { viewModel.goTo(Routes.SavedUsers) },
                     DrawerButton("Blocked Users", R.drawable.i_user_blocked),
                 ),
                 listOf(

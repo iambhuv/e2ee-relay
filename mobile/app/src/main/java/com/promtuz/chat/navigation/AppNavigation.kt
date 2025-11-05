@@ -1,11 +1,8 @@
 package com.promtuz.chat.navigation
 
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
 import androidx.compose.ui.window.*
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
@@ -27,29 +23,6 @@ import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.ui.screens.ChatScreen
 import com.promtuz.chat.ui.screens.HomeScreen
 import com.promtuz.chat.ui.screens.SavedUsersScreen
-import kotlinx.serialization.Serializable
-
-
-object Route : NavKey {
-    @Serializable
-    data object App : NavKey
-
-    @Serializable
-    data class ChatScreen(val userId: String) : NavKey
-
-    @Serializable
-    data class ProfileScreen(val userId: String) : NavKey
-
-    @Serializable
-    data object SettingScreen : NavKey
-
-
-    @Serializable
-    data object SavedUsersScreen : NavKey
-
-    @Serializable
-    data object ShareIdentityScreen : NavKey
-}
 
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -72,10 +45,9 @@ fun AppNavigation(
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
-            entry<Route.App> { HomeScreen(appViewModel) }
-            entry<Route.ProfileScreen> { Text("Profile") }
-            entry<Route.ChatScreen> { key -> ChatScreen(key.userId) }
-            entry<Route.SavedUsersScreen>(
+            entry<Routes.App> { HomeScreen(appViewModel) }
+            entry<Routes.Chat> { key -> ChatScreen(key.userId) }
+            entry<Routes.SavedUsers>(
                 metadata = DialogSceneStrategy.dialog(
                     DialogProperties(windowTitle = "Saved Users")
                 )

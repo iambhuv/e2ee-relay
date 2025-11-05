@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.promtuz.chat.navigation.AppNavigator
-import com.promtuz.chat.navigation.Route
+import com.promtuz.chat.navigation.Routes
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
@@ -18,7 +18,7 @@ class AppVM(
 
     val closeDrawer = MutableSharedFlow<Unit>()
 
-    var backStack = NavBackStack<NavKey>(Route.App)
+    var backStack = NavBackStack<NavKey>(Routes.App)
     val navigator = AppNavigator(backStack)
 
     /**

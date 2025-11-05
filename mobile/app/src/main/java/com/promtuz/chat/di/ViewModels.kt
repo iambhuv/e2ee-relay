@@ -3,6 +3,7 @@ package com.promtuz.chat.di
 import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.presentation.viewmodel.QrScannerVM
 import com.promtuz.chat.presentation.viewmodel.SavedUsersVM
+import com.promtuz.chat.presentation.viewmodel.SettingsVM
 import com.promtuz.chat.presentation.viewmodel.ShareIdentityVM
 import com.promtuz.chat.presentation.viewmodel.WelcomeVM
 import org.koin.core.module.dsl.viewModel
@@ -14,4 +15,5 @@ val vmModule = module {
     viewModel { ShareIdentityVM(get(), get(), get()) }
     viewModel { QrScannerVM(get(), get()) }
     viewModel { SavedUsersVM(get(), get()) }
+    viewModel { SettingsVM(get()) }
 }
