@@ -8,10 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun ChatScreen(userId: String, modifier: Modifier = Modifier) {
+fun ChatScreen() {
     Scaffold { padding ->
-        Box(modifier.padding(padding)) {
-            Text("Chat with $userId")
+        Box(Modifier.padding(padding)) {
+            Text("Chat Screen")
         }
     }
 }

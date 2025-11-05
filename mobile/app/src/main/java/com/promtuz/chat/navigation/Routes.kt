@@ -8,11 +8,13 @@ object Routes : NavKey {
     data object App : NavKey
 
     @Serializable
-    data class Chat(val userId: String) : NavKey
-
-    @Serializable
-    data object Setting : NavKey
+    data object Chat : NavKey
 
     @Serializable
     data object SavedUsers : NavKey
+
+    @Serializable
+    data object Settings : NavKey
+    @Serializable
+    data object About : NavKey
 }

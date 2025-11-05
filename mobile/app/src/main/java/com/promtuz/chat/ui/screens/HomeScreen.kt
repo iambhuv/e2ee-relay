@@ -101,7 +101,7 @@ fun HomeScreen(
                                 interactionSource = interactionSource,
                                 indication = ripple(color = colors.surfaceContainerHighest),
                                 onClick = {
-                                    appViewModel.navigator.chat(Routes.Chat(name))
+                                    appViewModel.goTo(Routes.Chat)
                                 },
                                 onLongClick = {
 
