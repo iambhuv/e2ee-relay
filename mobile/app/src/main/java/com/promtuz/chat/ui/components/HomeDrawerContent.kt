@@ -2,7 +2,6 @@ package com.promtuz.chat.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -18,7 +17,6 @@ import com.promtuz.chat.navigation.Routes
 import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.ui.util.groupedRoundShape
-import com.promtuz.chat.utils.extensions.then
 
 private data class DrawerButton(val label: String, val icon: Int, val onClick: (() -> Unit)? = null)
 
@@ -26,13 +24,10 @@ private data class DrawerButton(val label: String, val icon: Int, val onClick: (
 fun HomeDrawerContent(
     viewModel: AppVM
 ) {
-    val colors = MaterialTheme.colorScheme
-    val textTheme = MaterialTheme.typography
-
     BoxWithConstraints {
         val maxWidth = maxWidth * 0.8f
 
-        val list: List<List<DrawerButton>> = remember {
+        val drawerButtonGroups: List<List<DrawerButton>> = remember {
             listOf(
                 listOf(
                     DrawerButton("My Profile", R.drawable.i_profile)
@@ -42,8 +37,8 @@ fun HomeDrawerContent(
                     DrawerButton("Blocked Users", R.drawable.i_user_blocked),
                 ),
                 listOf(
-                    DrawerButton("Settings", R.drawable.oi_settings),
-                    DrawerButton("About", R.drawable.oi_info),
+                    DrawerButton("Settings", R.drawable.oi_settings) { viewModel.goTo(Routes.Settings) },
+                    DrawerButton("About", R.drawable.oi_info) { viewModel.goTo(Routes.About) },
                 )
             )
         }
@@ -56,55 +51,57 @@ fun HomeDrawerContent(
             LazyColumn(
                 Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 24.dp, horizontal = 12.dp)
+                    .padding(vertical = 24.dp, horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                itemsIndexed(list) { outerIndex, items ->
-                    (outerIndex != 0).then {
-                        Spacer(Modifier.padding(vertical = 8.dp))
+                for (drawerButtons in drawerButtonGroups) {
+                    item {
+                        Spacer(Modifier.padding(vertical = 5.dp))
                     }
 
-                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        for (index in 0..(items.size - 1)) {
-                            val (label, drawableIcon, onClick) = items[index]
-
-                            val interactionSource = remember { MutableInteractionSource() }
-
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clip(groupedRoundShape(index, items.size))
-                                    .background(colors.surfaceContainer)
-                                    .combinedClickable(
-                                        interactionSource = interactionSource,
-                                        indication = ripple(color = colors.surfaceContainerHighest),
-                                        onClick = {
-                                            onClick?.invoke()
-                                        },
-                                    )
-                                    .padding(vertical = 12.dp, horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painterResource(drawableIcon),
-                                    label,
-                                    Modifier.size(26.dp),
-                                    tint = colors.onSurface
-                                )
-
-                                Text(
-                                    label,
-                                    style = avgSizeInStyle(
-                                        textTheme.labelLargeEmphasized,
-                                        textTheme.bodyLargeEmphasized
-                                    ),
-                                    color = colors.onBackground
-                                )
-                            }
-                        }
+                    itemsIndexed(drawerButtons) { index, drawerButton ->
+                        DrawerGroupItem(drawerButton, index to drawerButtons.size)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DrawerGroupItem(drawerButton: DrawerButton, groupEntry: Pair<Int, Int>) {
+    val (index, groupSize) = groupEntry
+
+    val colors = MaterialTheme.colorScheme
+    val textTheme = MaterialTheme.typography
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(groupedRoundShape(index, groupSize))
+            .background(colors.surfaceContainer)
+            .combinedClickable(
+                onClick = {
+                    drawerButton.onClick?.invoke()
+                },
+            )
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painterResource(drawerButton.icon),
+            drawerButton.label,
+            Modifier.size(26.dp),
+            tint = colors.onSurface
+        )
+        Text(
+            drawerButton.label,
+            style = avgSizeInStyle(
+                textTheme.labelLargeEmphasized,
+                textTheme.bodyLargeEmphasized
+            ),
+            color = colors.onBackground
+        )
     }
 }
