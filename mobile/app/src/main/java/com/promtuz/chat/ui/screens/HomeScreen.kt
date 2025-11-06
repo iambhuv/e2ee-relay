@@ -196,7 +196,7 @@ fun StatsBox(
 
 @Composable
 @Preview
-fun HomeScreenPreview(modifier: Modifier = Modifier) {
+private fun HomeScreenPreview(modifier: Modifier = Modifier) {
     PromtuzTheme(darkTheme = true) {
         Box(Modifier.background(MaterialTheme.colorScheme.background)) {
             StatsBox(PaddingValues.Zero)
