@@ -15,8 +15,6 @@ fun FlexibleScreen(
     topBarModifier: Modifier = Modifier,
     content: @Composable ((PaddingValues, TopAppBarScrollBehavior) -> Unit)
 ) {
-    val colors = MaterialTheme.colorScheme
-
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {

@@ -18,15 +18,6 @@ class AppNavigator(val backStack: MutableList<NavKey>) {
         }
         return false
     }
-
-    fun chat(key: Routes.Chat) {
-        if (backStack.size >= 2 && backStack[backStack.size - 2] == key) {
-            backStack.removeLastOrNull()
-        } else if (backStack.last() != key) {
-            if (backStack.size >= 2 && backStack[backStack.size - 2] == Routes.App) backStack.removeLastOrNull()
-            backStack.add(key)
-        }
-    }
 }
 
 

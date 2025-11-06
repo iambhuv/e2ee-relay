@@ -8,22 +8,34 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
+import androidx.navigation3.runtime.NavKey
 import com.promtuz.chat.R
 import com.promtuz.chat.navigation.Routes
 import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.ui.text.avgSizeInStyle
 import com.promtuz.chat.ui.util.groupedRoundShape
+import kotlinx.coroutines.launch
 
 private data class DrawerButton(val label: String, val icon: Int, val onClick: (() -> Unit)? = null)
 
 @Composable
 fun HomeDrawerContent(
-    viewModel: AppVM
+    viewModel: AppVM, drawerState: DrawerState
 ) {
+    val scope = rememberCoroutineScope()
+    val open = remember {
+        { route: NavKey ->
+            scope.launch { drawerState.close() }
+            viewModel.navigator.push(route)
+        }
+    }
+
+
     BoxWithConstraints {
         val maxWidth = maxWidth * 0.8f
 
@@ -31,14 +43,12 @@ fun HomeDrawerContent(
             listOf(
                 listOf(
                     DrawerButton("My Profile", R.drawable.i_profile)
-                ),
-                listOf(
-                    DrawerButton("Saved Users", R.drawable.i_contacts) { viewModel.goTo(Routes.SavedUsers) },
+                ), listOf(
+                    DrawerButton("Saved Users", R.drawable.i_contacts) { open(Routes.SavedUsers) },
                     DrawerButton("Blocked Users", R.drawable.i_user_blocked),
-                ),
-                listOf(
-                    DrawerButton("Settings", R.drawable.oi_settings) { viewModel.goTo(Routes.Settings) },
-                    DrawerButton("About", R.drawable.oi_info) { viewModel.goTo(Routes.About) },
+                ), listOf(
+                    DrawerButton("Settings", R.drawable.oi_settings) { open(Routes.Settings) },
+                    DrawerButton("About", R.drawable.oi_info) { open(Routes.About) },
                 )
             )
         }
@@ -96,12 +106,9 @@ private fun DrawerGroupItem(drawerButton: DrawerButton, groupEntry: Pair<Int, In
             tint = colors.onSurface
         )
         Text(
-            drawerButton.label,
-            style = avgSizeInStyle(
-                textTheme.labelLargeEmphasized,
-                textTheme.bodyLargeEmphasized
-            ),
-            color = colors.onBackground
+            drawerButton.label, style = avgSizeInStyle(
+                textTheme.labelLargeEmphasized, textTheme.bodyLargeEmphasized
+            ), color = colors.onBackground
         )
     }
 }

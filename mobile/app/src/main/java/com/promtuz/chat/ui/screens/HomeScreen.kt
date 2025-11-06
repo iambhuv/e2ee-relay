@@ -47,12 +47,7 @@ fun HomeScreen(
     val textTheme = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
-    LaunchedEffect(Unit) {
-        appViewModel.closeDrawer.collect {
-            drawerState.close()
-        }
-    }
+    val navigator = appViewModel.navigator
 
     LaunchedEffect(drawerState.currentOffset) {
         Timber.tag("HomeDrawer")
@@ -61,7 +56,7 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        drawerContent = { HomeDrawerContent(appViewModel) },
+        drawerContent = { HomeDrawerContent(appViewModel, drawerState) },
     ) {
         Scaffold(topBar = { TopBar() }, floatingActionButton = {
             FloatingActionButton({
@@ -85,8 +80,8 @@ fun HomeScreen(
                     Spacer(Modifier.height(innerPadding.calculateTopPadding()))
                 }
 
-                itemsIndexed(dummyChats) { index, (name, msg) ->
-                    val interactionSource = remember { MutableInteractionSource() }
+                itemsIndexed(dummyChats) { index, chat ->
+                    val (_, name, msg) = chat
 
                     Row(
                         Modifier
@@ -94,10 +89,8 @@ fun HomeScreen(
                             .clip(groupedRoundShape(index, dummyChats.size))
                             .background(colors.surfaceContainer.copy(0.75f))
                             .combinedClickable(
-                                interactionSource = interactionSource,
-                                indication = ripple(color = colors.surfaceContainerHighest),
                                 onClick = {
-                                    appViewModel.goTo(Routes.Chat)
+                                    appViewModel.openChat(chat)
                                 },
                                 onLongClick = {
 

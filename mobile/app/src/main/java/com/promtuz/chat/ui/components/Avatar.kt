@@ -30,8 +30,9 @@ const val AVATAR_RADIUS_RATIO = 2.875f;
 fun Avatar(
     name: String,
     size: Dp = 52.dp,
-    clip: Shape = RoundedCornerShape(size / AVATAR_RADIUS_RATIO)
+    clipRatio: Float = AVATAR_RADIUS_RATIO
 ) {
+    val clip = RoundedCornerShape(size / clipRatio)
     val fallbackChars = name.split(" ")
         .filter { it.isNotBlank() }
         .map { it.first() }
@@ -58,7 +59,7 @@ fun Avatar(
         Text(
             fallbackChars,
             fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
+            fontSize = (size.value / 2.6f).sp,
             color = MaterialTheme.colorScheme.onBackground.copy(0.85f)
         )
     }

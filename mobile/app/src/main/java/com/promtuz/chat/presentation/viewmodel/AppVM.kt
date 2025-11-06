@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.promtuz.chat.domain.model.Chat
 import com.promtuz.chat.navigation.AppNavigator
 import com.promtuz.chat.navigation.Routes
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -16,18 +17,13 @@ class AppVM(
 ) : ViewModel() {
     private val context: Context get() = application.applicationContext
 
-    val closeDrawer = MutableSharedFlow<Unit>()
+    var activeChatUser: Chat? = null
 
     var backStack = NavBackStack<NavKey>(Routes.App)
     val navigator = AppNavigator(backStack)
 
-    /**
-     * This apparently closes the HomeScreenDrawer if open, whereas [AppNavigator.push] doesn't
-     */
-    fun goTo(key: NavKey) {
-        viewModelScope.launch {
-            closeDrawer.emit(Unit)
-            navigator.push(key)
-        }
+    fun openChat(identityKey: Chat) {
+        activeChatUser = identityKey
+        navigator.push(Routes.Chat)
     }
 }

@@ -14,7 +14,7 @@ private const val QR_MAGIC_NUMBER: UInt = 0x0750545au
  *  Identity will contain PublicKey AgreementToken Nickname?
  *
  *  AgreementToken can be an array of 4 null bytes to indicate a non agreement qr
- *
+ * ```
  * ┌───────────────┬────────────────┬────────────────┐
  * ├───────────────┤ Byte Structure ├────────────────┤
  * ├────────┬──────┼──────────┬─────┴────────────────┤
@@ -25,6 +25,7 @@ private const val QR_MAGIC_NUMBER: UInt = 0x0750545au
  * │ 0x24   │ 4|32 │ uint8[]  │ Agreement Token      │
  * │ END    │ var  │ uint8[]  │ Optional Nickname    │
  * └────────┴──────┴──────────┴──────────────────────┘
+ * ```
  */
 data class Identity(
     val key: ByteArray,

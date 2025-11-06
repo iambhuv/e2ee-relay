@@ -3,7 +3,6 @@ package com.promtuz.chat.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +15,6 @@ import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
-import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
 import com.promtuz.chat.data.remote.ConnectionStatus
@@ -74,11 +72,11 @@ fun TopBar(quicClient: QuicClient = koinInject()) {
                 dynamicTitle,
                 fontFamily = calSansfamily,
                 fontSize = 26.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                //textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 18.dp)
             )
-        },
-        actions = {
-            Avatar("B", 44.dp, RoundedCornerShape(16.dp))
-        })
+        }
+    )
 }
