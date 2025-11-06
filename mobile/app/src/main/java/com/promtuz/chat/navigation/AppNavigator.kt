@@ -1,5 +1,7 @@
 package com.promtuz.chat.navigation
 
+import android.content.Context
+import android.content.Intent
 import androidx.navigation3.runtime.NavKey
 
 class AppNavigator(val backStack: MutableList<NavKey>) {
@@ -25,4 +27,9 @@ class AppNavigator(val backStack: MutableList<NavKey>) {
             backStack.add(key)
         }
     }
+}
+
+
+fun Context.goTo(clazz: Class<*>) {
+    return this.startActivity(Intent(this, clazz))
 }

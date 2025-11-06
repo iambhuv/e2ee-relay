@@ -17,11 +17,11 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
+import com.promtuz.chat.navigation.goTo
 import com.promtuz.chat.presentation.viewmodel.SettingsVM
+import com.promtuz.chat.ui.activities.ManageSpace
 import com.promtuz.chat.ui.components.FlexibleScreen
 import com.promtuz.chat.ui.text.avgSizeInStyle
-import com.promtuz.chat.ui.theme.gradientScrim
-import com.promtuz.chat.ui.theme.transparentTopAppBar
 import com.promtuz.chat.ui.util.groupedRoundShape
 import org.koin.androidx.compose.koinViewModel
 
@@ -31,6 +31,7 @@ private data class SettingGroup(val name: String, val items: List<SettingItem>)
 @Composable
 fun SettingsScreen(viewModel: SettingsVM = koinViewModel()) {
     val direction = LocalLayoutDirection.current
+    val context = LocalContext.current
     val textTheme = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
 
@@ -41,7 +42,7 @@ fun SettingsScreen(viewModel: SettingsVM = koinViewModel()) {
                     SettingItem("Identity & Keys", R.drawable.i_key) {},
                     SettingItem("Privacy & Security", R.drawable.i_shield_lock) {},
                     SettingItem("Blocked Users", R.drawable.i_user_blocked) {},
-                    SettingItem("Storage", R.drawable.i_hard_drive) {}, //
+                    SettingItem("Storage", R.drawable.i_hard_drive) { context.goTo(ManageSpace::class.java) },
                     SettingItem("Notifications", R.drawable.i_notifications) {},
                 )
             ),
