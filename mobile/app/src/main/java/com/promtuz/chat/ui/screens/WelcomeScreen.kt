@@ -52,6 +52,7 @@ fun WelcomeScreen(
 
     val state by welcomeViewModel.uiState
     val isTryingToContinue by remember { derivedStateOf { state.status != WelcomeStatus.Normal } }
+    val isNormal by remember { derivedStateOf { state.status == WelcomeStatus.Normal } }
 
     val focusManager = LocalFocusManager.current
 
@@ -126,7 +127,7 @@ fun WelcomeScreen(
 
             Button(
                 onClick = {
-                    !isTryingToContinue.then {
+                    isNormal.then {
                         welcomeViewModel.`continue` {
                             context.startActivity(Intent(context, App::class.java))
                             (context as? Activity)?.finish()
