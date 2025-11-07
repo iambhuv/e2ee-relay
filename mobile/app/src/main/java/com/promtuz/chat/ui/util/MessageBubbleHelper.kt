@@ -51,11 +51,14 @@ fun DrawScope.composeBubble(
     containerColor: Color,
     cornerRadius: Dp,
     isSent: Boolean,
-    tailScale: Float = 12f
+    showTail: Boolean = true,
+    tailScale: Float = 10f
 ) {
     drawPath(Path().apply {
-        addRoundRect(messageRoundRect(size, cornerRadius.toPx(), isSent))
+        addRoundRect(messageRoundRect(size, cornerRadius.toPx(), isSent, showTail))
     }, containerColor)
+
+    if (!showTail) return
 
     val (offset, tailPath) = if(isSent) rightTailPath(tailScale) else leftTailPath(tailScale)
 

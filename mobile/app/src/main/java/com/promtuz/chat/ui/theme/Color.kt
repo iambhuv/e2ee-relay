@@ -40,7 +40,6 @@ fun transparentTopAppBar() = TopAppBarDefaults.topAppBarColors(
  * 2. `-0.3f` will decrease light by `30%` regardless of base value, but will max out at 0% (pitch black)
  *
  */
-@Deprecated("Use MaterialTheme", level = DeprecationLevel.ERROR)
 fun adjustLight(col: Color, changeInLight: Float): Color {
     val hsl = floatArrayOf(0f, 0f, 0f)
     ColorUtils.RGBToHSL(
