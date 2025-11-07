@@ -3,7 +3,6 @@ package com.promtuz.chat.ui.screens
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -12,11 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
@@ -26,10 +23,10 @@ import com.promtuz.chat.data.remote.QuicClient
 import com.promtuz.chat.navigation.Routes
 import com.promtuz.chat.presentation.viewmodel.AppVM
 import com.promtuz.chat.security.KeyManager
+import com.promtuz.chat.ui.activities.Chat
 import com.promtuz.chat.ui.activities.ShareIdentity
 import com.promtuz.chat.ui.components.Avatar
 import com.promtuz.chat.ui.components.DrawableIcon
-import com.promtuz.chat.ui.components.HomeDrawerContent
 import com.promtuz.chat.ui.components.TopBar
 import com.promtuz.chat.ui.theme.PromtuzTheme
 import com.promtuz.chat.ui.util.groupedRoundShape
@@ -54,88 +51,106 @@ fun HomeScreen(
             .d("${drawerState.isAnimationRunning} ; ${drawerState.currentOffset}")
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = { HomeDrawerContent(appViewModel, drawerState) },
-    ) {
-        Scaffold(topBar = { TopBar() }, floatingActionButton = {
-            FloatingActionButton({
-                context.startActivity(Intent(context, ShareIdentity::class.java))
-            }) {
-                DrawableIcon(R.drawable.i_qr_code_scanner, desc = "QR Code", tint = colors.onPrimaryContainer)
+    Scaffold(
+        topBar = { TopBar(appViewModel) },
+        floatingActionButton = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SmallFloatingActionButton({
+                    context.startActivity(Intent(context, ShareIdentity::class.java))
+                }) {
+                    DrawableIcon(
+                        R.drawable.i_qr_code_scanner,
+                        desc = "QR Code",
+                        tint = colors.onPrimaryContainer
+                    )
+                }
+                FloatingActionButton({
+                    navigator.push(Routes.SavedUsers)
+                }) {
+                    DrawableIcon(
+                        R.drawable.i_contacts,
+                        Modifier.size(32.dp),
+                        desc = "Contacts",
+                        tint = colors.onPrimaryContainer,
+                    )
+                }
             }
         }) { innerPadding ->
-            LazyColumn(
-                Modifier
-                    .padding(
-                        start = innerPadding.calculateLeftPadding(direction),
-                        end = innerPadding.calculateRightPadding(direction),
-                        top = 0.dp,
-                        bottom = 0.dp
-                    )
-                    .padding(horizontal = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                item {
-                    Spacer(Modifier.height(innerPadding.calculateTopPadding()))
-                }
+        LazyColumn(
+            Modifier
+                .padding(
+                    start = innerPadding.calculateLeftPadding(direction),
+                    end = innerPadding.calculateRightPadding(direction),
+                    top = 0.dp,
+                    bottom = 0.dp
+                )
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            item {
+                Spacer(Modifier.height(innerPadding.calculateTopPadding()))
+            }
 
-                itemsIndexed(dummyChats) { index, chat ->
-                    val (_, name, msg) = chat
+            itemsIndexed(dummyChats) { index, chat ->
+                val (_, name, msg) = chat
 
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(groupedRoundShape(index, dummyChats.size))
-                            .background(colors.surfaceContainer.copy(0.75f))
-                            .combinedClickable(
-                                onClick = {
-                                    appViewModel.openChat(chat)
-                                },
-                                onLongClick = {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(groupedRoundShape(index, dummyChats.size))
+                        .background(colors.surfaceContainer.copy(0.75f))
+                        .combinedClickable(
+                            onClick = {
+                                context.startActivity(Intent(context, Chat::class.java).apply {
+                                    putExtra("user", chat.identity)
+                                })
+                            },
+                            onLongClick = {
 
-                                }
+                            }
+                        )
+                        .padding(vertical = 10.dp, horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Avatar(name)
+
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(
+                                name,
+                                style = textTheme.titleMediumEmphasized,
+                                color = colors.onSecondaryContainer
                             )
-                            .padding(vertical = 10.dp, horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Avatar(name)
 
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    name,
-                                    style = textTheme.titleMediumEmphasized,
-                                    color = colors.onSecondaryContainer
-                                )
+                            Text(
+                                parseMessageDate(msg.timestamp),
+                                style = textTheme.bodySmallEmphasized,
+                                color = colors.onSecondaryContainer.copy(0.5f)
+                            )
+                        }
 
-                                Text(
-                                    parseMessageDate(msg.timestamp),
-                                    style = textTheme.bodySmallEmphasized,
-                                    color = colors.onSecondaryContainer.copy(0.5f)
-                                )
-                            }
-
-                            msg.content?.let {
-                                Text(
-                                    it,
-                                    style = textTheme.bodySmallEmphasized,
-                                    color = colors.onSecondaryContainer.copy(0.7f)
-                                )
-                            }
+                        msg.content?.let {
+                            Text(
+                                it,
+                                style = textTheme.bodySmallEmphasized,
+                                color = colors.onSecondaryContainer.copy(0.7f)
+                            )
                         }
                     }
                 }
+            }
 
 
-                item {
-                    Spacer(Modifier.height(24.dp))
-                }
+            item {
+                Spacer(Modifier.height(24.dp))
             }
         }
     }

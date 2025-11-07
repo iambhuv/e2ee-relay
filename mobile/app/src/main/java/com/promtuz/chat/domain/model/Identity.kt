@@ -41,7 +41,7 @@ data class Identity(
      * Generates a QR Ready ByteArray
      */
     fun toByteArray(): ByteArray {
-        val nicknameBytes = (nickname ?: "").toByteArray(Charsets.UTF_8)
+        val nicknameBytes = nickname.toByteArray(Charsets.UTF_8)
         val minSize = if (token != null) MIN_SIZE_TOKEN else MIN_SIZE
         val bufferSize = minSize + nicknameBytes.size
 

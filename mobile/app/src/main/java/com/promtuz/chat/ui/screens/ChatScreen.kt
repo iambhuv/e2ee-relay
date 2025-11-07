@@ -15,14 +15,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.unit.*
 import androidx.core.graphics.drawable.toBitmap
 import com.promtuz.chat.R
 import com.promtuz.chat.data.repository.UserRepository
-import com.promtuz.chat.presentation.viewmodel.AppVM
+import com.promtuz.chat.domain.model.Chat
 import com.promtuz.chat.presentation.viewmodel.ChatVM
 import com.promtuz.chat.ui.components.ChatBottomBar
 import com.promtuz.chat.ui.components.ChatTopBar
@@ -35,12 +34,11 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ChatScreen(
-    appViewModel: AppVM,
+    chat: Chat,
     viewModel: ChatVM = koinViewModel(),
     userRepository: UserRepository = koinInject()
 ) {
     val direction = LocalLayoutDirection.current
-    val chat = appViewModel.activeChatUser
     val colors = MaterialTheme.colorScheme
     val hazeState = rememberHazeState()
     val lazyState = rememberLazyListState(
@@ -57,39 +55,37 @@ fun ChatScreen(
     val shader = ImageShader(bgPattern, TileMode.Repeated, TileMode.Repeated)
     val brush = ShaderBrush(shader)
 
-    if (chat != null) {
-        Scaffold(
+    Scaffold(
+        Modifier
+            .fillMaxSize()
+            .imePadding(),
+        topBar = { ChatTopBar(chat, hazeState) },
+        bottomBar = { ChatBottomBar(hazeState, interactionSource) }
+    ) { padding ->
+        LazyColumn(
             Modifier
                 .fillMaxSize()
-                .imePadding(),
-            topBar = { ChatTopBar(chat, hazeState) },
-            bottomBar = { ChatBottomBar(hazeState, interactionSource) }
-        ) { padding ->
-            LazyColumn(
-                Modifier
-                    .fillMaxSize()
-                    .hazeSource(hazeState)
-                    .background(colors.surface)
-                    .background(brush, alpha = 0.1f)
-                    .padding(
-                        start = padding.calculateLeftPadding(direction),
-                        end = padding.calculateRightPadding(direction),
-                        top = 0.dp,
-                        bottom = 0.dp
-                    ),
-                contentPadding = PaddingValues(
-                    top = padding.calculateTopPadding() + 6.dp,
-                    bottom = padding.calculateBottomPadding() + 6.dp,
+                .hazeSource(hazeState)
+                .background(colors.surface)
+                .background(brush, alpha = 0.1f)
+                .padding(
+                    start = padding.calculateLeftPadding(direction),
+                    end = padding.calculateRightPadding(direction),
+                    top = 0.dp,
+                    bottom = 0.dp
                 ),
-                state = lazyState,
-                reverseLayout = true,
-                verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.Bottom)
-            ) {
-                item { Spacer(Modifier.height(3.dp)) }
-                items(messages, key = { it.id }) {
-                    MessageBubble(it)
-                }
+            contentPadding = PaddingValues(
+                top = padding.calculateTopPadding() + 6.dp,
+                bottom = padding.calculateBottomPadding() + 6.dp,
+            ),
+            state = lazyState,
+            reverseLayout = true,
+            verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.Bottom)
+        ) {
+            item { Spacer(Modifier.height(3.dp)) }
+            items(messages, key = { it.id }) {
+                MessageBubble(it)
             }
         }
-    } else appViewModel.navigator.back()
+    }
 }

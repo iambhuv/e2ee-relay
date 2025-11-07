@@ -39,10 +39,10 @@ fun ChatTopBar(chat: Chat, haze: HazeState) {
 
     val hazeStyle = HazeStyle(
         colors.surfaceContainerLow,
-        HazeDefaults.tint(colors.surfaceContainer),
-        32.dp,
+        HazeDefaults.tint(colors.surfaceContainerLow),
+        48.dp,
         0.1f,
-        HazeDefaults.tint(colors.surfaceContainer)
+        HazeDefaults.tint(colors.surfaceContainerLow)
     )
 
     TopAppBar(

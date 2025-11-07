@@ -82,22 +82,3 @@ fun QrCode(
             })
     }
 }
-
-
-@Preview
-@Composable
-fun QrCodePreview() {
-    PromtuzTheme(false) {
-        val publicKey = remember { ByteArray(32).also { Random.nextBytes(it) } }
-        val identity = Identity(publicKey, nickname = "Bhuvnesh")
-
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            QrCode(identity.toByteArray())
-        }
-    }
-}

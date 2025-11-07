@@ -88,11 +88,20 @@
 
         <activity
             android:name=".ui.activities.QrScanner"
+            android:configChanges="orientation|screenSize|screenLayout"
+            android:exported="false" />
+
+
+        <activity
+            android:name=".ui.activities.Chat"
+            android:configChanges="orientation|screenSize|screenLayout"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
 
 
         <activity
             android:name=".ui.activities.ShareIdentity"
+            android:configChanges="orientation|screenSize|screenLayout"
             android:exported="false" />
     </application>
 </manifest>

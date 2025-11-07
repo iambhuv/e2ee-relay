@@ -35,7 +35,7 @@ fun AppNavigation(
         ),
         entryProvider = entryProvider {
             entry<Routes.App> { HomeScreen(appViewModel) }
-            entry<Routes.Chat> { key -> ChatScreen(appViewModel) }
+            //entry<Routes.Chat> { key -> ChatScreen(appViewModel) }
             entry<Routes.SavedUsers> { SavedUsersScreen() }
             entry<Routes.Settings> { SettingsScreen() }
             entry<Routes.About> { AboutScreen() }
