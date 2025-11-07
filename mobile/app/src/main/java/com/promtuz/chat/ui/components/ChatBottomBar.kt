@@ -48,7 +48,6 @@ fun ChatBottomBar(haze: HazeState, interactionSource: MutableInteractionSource) 
     val textStyle = MaterialTheme.typography
     val windowInfo = LocalWindowInfo.current
 
-
     var message by remember { mutableStateOf("") }
 
     val insetsPadding = ScaffoldDefaults.contentWindowInsets.asPaddingValues()

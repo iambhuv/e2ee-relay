@@ -39,7 +39,6 @@ fun ChatScreen(
     val direction = LocalLayoutDirection.current
     val chat = appViewModel.activeChatUser
     val colors = MaterialTheme.colorScheme
-    val scope = rememberCoroutineScope()
     val hazeState = rememberHazeState()
     val lazyState = rememberLazyListState(
         prefetchStrategy = LazyListPrefetchStrategy(nestedPrefetchItemCount = 8)
@@ -81,37 +80,4 @@ fun ChatScreen(
             }
         }
     } else appViewModel.navigator.back()
-}
-
-@Preview
-@Composable
-private fun ChatTopBarPreview() {
-    val chat = dummyChats.random()
-
-    PromtuzTheme(true) {
-        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-            ChatTopBar(chat, rememberHazeState())
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun MessageBubblePreview() {
-    PromtuzTheme(true) {
-        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-            MessageBubble("Preview Hello")
-        }
-    }
-}
-
-
-@Preview
-@Composable
-private fun ChatBottomBarPreview() {
-    PromtuzTheme(true) {
-        Box(Modifier.background(MaterialTheme.colorScheme.surfaceContainer)) {
-            ChatBottomBar(rememberHazeState(), remember { MutableInteractionSource() })
-        }
-    }
 }
