@@ -1,8 +1,6 @@
 package com.promtuz.chat.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
@@ -11,7 +9,7 @@ import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.style.*
 
 @Composable
-fun BoxScope.IdentityHexGrid(key: ByteArray, gridState: LazyGridState = rememberLazyGridState()) {
+fun IdentityHexGrid(key: ByteArray) {
     val keyHex = key.toHexString(HexFormat.UpperCase)
 
     // TODO: add this in "appearance" settings as well
@@ -35,7 +33,7 @@ fun BoxScope.IdentityHexGrid(key: ByteArray, gridState: LazyGridState = remember
                         Text(
                             ch,
                             style = MaterialTheme.typography.titleLargeEmphasized.copy(
-                                color = Color.Black,
+                                color = contentColor,
                                 fontWeight = FontWeight.Bold
                             ),
                             textAlign = TextAlign.Center

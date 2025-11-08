@@ -2,7 +2,6 @@ package com.promtuz.chat.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +29,6 @@ fun IdentityQrCode(
 
     val data = remember { identity.toByteArray() }
     val qrView = remember { QrView(context) }
-    val gridState = rememberLazyGridState()
 
     Box(
         modifier
@@ -59,7 +57,7 @@ fun IdentityQrCode(
                         }
                     })
 
-                1 -> IdentityHexGrid(identity.key, gridState)
+                1 -> IdentityHexGrid(identity.key)
             }
         }
 
