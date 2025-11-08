@@ -15,12 +15,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class QrScannerVM(
     private val application: Application,
     private val userRepository: UserRepository
 ) : ViewModel() {
     private val context: Context get() = application.applicationContext
+    private val log = Timber.tag("QrScannerVM")
 
     var imageAnalysis = ImageAnalysis.Builder()
         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -60,7 +62,10 @@ class QrScannerVM(
     fun handleScannedBarcodes(barcodes: List<Barcode>) = viewModelScope.launch {
         _identities.value = (barcodes.mapNotNull { barcode ->
             val identity =
-                barcode.rawBytes?.let { Identity.fromByteArray(it) } ?: return@mapNotNull null
+                barcode.rawBytes?.let {
+                    log.d("IDENTITY: ${it.toHexString()}")
+                    Identity.fromByteArray(it)
+                } ?: return@mapNotNull null
 
             val user = userRepository.fromIdentity(identity)
             UserIdentity(user, identity)

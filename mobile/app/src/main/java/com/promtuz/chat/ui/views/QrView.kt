@@ -4,112 +4,72 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
 import android.view.View
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
+import androidx.core.graphics.set
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class QrView(context: Context) : View(context) {
-    private var content = ByteArray(0)
-    private var size = 512
-    private val writer = QRCodeWriter()
-    private var color = Color.BLACK
-    private var cachedBitmap: Bitmap? = null
-    private var onQrGenerated: (() -> Unit)? = null
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private var generationJob: Job? = null
 
+    var content = ByteArray(0)
+    var sizePx = 0
+    var color = Color.BLACK
+    var cached: Bitmap? = null
+
+    private val writer = QRCodeWriter()
     private val hints = mapOf(
         EncodeHintType.CHARACTER_SET to "ISO-8859-1",
         EncodeHintType.MARGIN to 0
     )
 
-    fun setOnQrGeneratedListener(listener: () -> Unit) {
-        onQrGenerated = listener
+    fun setBitmap(bmp: Bitmap?) {
+        cached = bmp
+        invalidate()
     }
 
-    fun setContent(bytes: ByteArray) {
-        content = bytes
-        generateBitmapAsync()
-    }
+    fun regenerate() {
+        if (content.isEmpty() || sizePx <= 0) return
 
-    fun setSize(width: Int) {
-        size = width
-        generateBitmapAsync()
-    }
+        // Step 1 — generate tiny QR (fast)
+        val matrix = writer.encode(
+            content.toString(Charsets.ISO_8859_1),
+            BarcodeFormat.QR_CODE,
+            0, 0,
+            hints
+        )
 
-    fun setColor(color: Int) {
-        this.color = color
-        generateBitmapAsync()
-    }
+        val w = matrix.width
+        val h = matrix.height
 
-    private fun generateBitmapAsync() {
-        generationJob?.cancel()
-        generationJob = scope.launch {
-            if (content.isEmpty() || size <= 0) return@launch
+        val tiny = createBitmap(w, h)
+        val black = color
+        val white = Color.WHITE
 
-            val bitMatrix = writer.encode(
-                content.toString(Charsets.ISO_8859_1),
-                BarcodeFormat.QR_CODE,
-                size,
-                size,
-                hints
-            )
-
-            val matrixSize = bitMatrix.width
-            val cellSize = size.toFloat() / matrixSize
-
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = this@QrView.color
-                style = Paint.Style.FILL
-            }
-
-            val radius = cellSize * 0.35f
-
-            for (y in 0 until matrixSize) {
-                for (x in 0 until matrixSize) {
-                    if (bitMatrix[x, y]) {
-                        val left = x * cellSize
-                        val top = y * cellSize
-                        val right = left + cellSize
-                        val bottom = top + cellSize
-                        canvas.drawRoundRect(left, top, right, bottom, radius, radius, paint)
-                    }
-                }
-            }
-
-            withContext(Dispatchers.Main) {
-                cachedBitmap?.recycle()
-                cachedBitmap = bitmap
-                invalidate()
-                onQrGenerated?.invoke()
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                tiny[x, y] = if (matrix[x, y]) black else white
             }
         }
+
+        // Step 2 — scale once (super fast)
+        val scaled = tiny.scale(sizePx, sizePx, false)
+        tiny.recycle()
+
+        cached?.recycle()
+        cached = scaled
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
-        cachedBitmap?.let { bitmap ->
-            canvas.drawBitmap(bitmap, 0f, 0f, null)
-        }
+        cached?.let { canvas.drawBitmap(it, 0f, 0f, null) }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        generationJob?.cancel()
-        scope.cancel()
-        cachedBitmap?.recycle()
-        cachedBitmap = null
+        cached?.recycle()
+        cached = null
     }
 }

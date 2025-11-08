@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.*
 import com.promtuz.chat.R
 import com.promtuz.chat.presentation.viewmodel.ShareIdentityVM
 import com.promtuz.chat.ui.activities.QrScanner
-import com.promtuz.chat.ui.components.QrCode
+import com.promtuz.chat.ui.components.IdentityQrCode
 import com.promtuz.chat.ui.components.SimpleScreen
 import dev.shreyaspatil.capturable.capturable
 import dev.shreyaspatil.capturable.controller.rememberCaptureController
@@ -28,6 +28,7 @@ fun ShareIdentityScreen(
     val context = LocalContext.current
     val publicIdentity by viewModel.publicIdentity.collectAsState()
     val captureController = rememberCaptureController()
+    val colors = MaterialTheme.colorScheme
 
     SimpleScreen("Share Identity Key") {
         Column(
@@ -40,14 +41,7 @@ fun ShareIdentityScreen(
                     .align(Alignment.CenterHorizontally)
                     .capturable(captureController)
             ) {
-                publicIdentity?.let {
-                    QrCode(
-                        it.toByteArray(),
-                        Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                    )
-                }
+                publicIdentity?.let { IdentityQrCode(it) }
             }
             Column(
                 Modifier.fillMaxWidth(),

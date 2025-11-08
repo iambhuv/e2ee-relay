@@ -35,6 +35,8 @@ fun SavedUsersScreen(viewModel: SavedUsersVM = koinViewModel()) {
         } else {
             val userGroups by viewModel.users.collectAsState(emptyMap())
 
+            println("USER_GROUPS : $userGroups")
+
             LazyColumn(
                 Modifier
                     .fillMaxSize()

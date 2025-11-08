@@ -30,7 +30,7 @@ class ShareIdentityVM(
     init {
         viewModelScope.launch {
             user = userRepository.getCurrentUser()
-            _publicIdentity.value = Identity(user.key, user.nickname ?: "")
+            _publicIdentity.value = Identity(user.key, user.nickname)
         }
     }
 

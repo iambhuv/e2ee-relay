@@ -34,3 +34,12 @@ chats stored have no "basis" of pre-existing on the device
 chats can either be 
   saved via scanning qr codes of other users
   or receiving a (message request)? from "unknown" user
+
+done
+
+## no animations for now
+too much time consuming
+
+## sending messages
+app and chat are seperate activities,
+gotta move connections to "Service"
