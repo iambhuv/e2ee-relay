@@ -7,6 +7,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.platform.*
 
+/**
+ * TODO:
+ *  Need additional app level theme apart from material theme for customizing app level components
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PromtuzTheme(

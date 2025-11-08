@@ -31,6 +31,14 @@ import dev.chrisbanes.haze.rememberHazeState
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
+/**
+ * TODO:
+ *  - Make almost everything customizable
+ *  - Make a system for easy value storage and retrieval from preferences i suppose,
+ *  - Make structures for UI schemes and styles like the order of elements, colors, spacing, roundness.
+ *  - Make screen to grant users option to choose whatever combination of customization they like
+ *  - Make exporting and importing all style preferences possible
+ */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ChatScreen(

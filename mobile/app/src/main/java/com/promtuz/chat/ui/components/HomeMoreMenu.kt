@@ -14,6 +14,10 @@ import com.promtuz.chat.utils.extensions.then
 
 private data class MenuItem(val label: String, val icon: Int, val onClick: (() -> Unit))
 
+/**
+ * FIXME:
+ *  It looks like shit right now
+ */
 @Composable
 fun HomeMoreMenu(viewModel: AppVM, expanded: MutableState<Boolean>, modifier: Modifier = Modifier) {
     val open = remember {

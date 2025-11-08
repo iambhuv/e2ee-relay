@@ -12,21 +12,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.*
 import androidx.core.view.doOnLayout
-import com.promtuz.chat.domain.model.Identity
-import com.promtuz.chat.ui.theme.LocalTheme
-import com.promtuz.chat.ui.theme.PromtuzTheme
-import com.promtuz.chat.ui.theme.ThemeMode
 import com.promtuz.chat.ui.views.QrView
 import com.promtuz.chat.utils.extensions.then
-import kotlin.random.Random
 
+/**
+ * FIXME:
+ *  container color looks doesn't look good
+ */
 @Composable
 fun QrCode(
     data: ByteArray,
