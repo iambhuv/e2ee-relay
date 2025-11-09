@@ -167,4 +167,5 @@ dependencies {
     implementation(libs.timber)
 
     implementation(libs.capturable)
+    testImplementation(kotlin("test"))
 }

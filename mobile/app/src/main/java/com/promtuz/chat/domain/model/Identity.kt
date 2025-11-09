@@ -109,8 +109,7 @@ data class Identity(
             val startPosition = buffer.position()
             val nullToken = ByteArray(4)
             buffer.get(nullToken)
-            buffer.position(startPosition)
-            return nullToken.all { byte -> byte.toInt() == 0x00 }
+            return nullToken.all { byte -> byte.toInt() == 0x00 }.also { if (!it) buffer.position(startPosition) }
         }
     }
 
