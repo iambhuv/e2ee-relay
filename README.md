@@ -1,3 +1,1 @@
-## Welcome Screen
-
-<img src="assets/welcome_screen.jpg" height="486px" alt="Welcome Screen">
+## A proof of concept for relay based communication
